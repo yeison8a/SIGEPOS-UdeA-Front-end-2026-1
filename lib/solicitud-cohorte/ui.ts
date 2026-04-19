@@ -1,0 +1,2 @@
+export const solicitudInputClass =
+  "w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#0f5c3a] focus:ring-4 focus:ring-green-100";
