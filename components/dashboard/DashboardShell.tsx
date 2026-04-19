@@ -7,7 +7,7 @@ import {
   Bell,
   ChevronRight,
   ClipboardList,
-  FileText,
+  FileSearch,
   Home,
   LayoutDashboard,
   LogOut,
@@ -52,18 +52,18 @@ export default function DashboardShell({
           },
           {
             label: "Solicitudes",
-            href: "/solicitud-cohorte/informacion",
+            href: "/admin/solicitudes",
             icon: <ClipboardList size={18} />,
           },
           {
             label: "Gestión usuarios",
-            href: "#",
+            href: "/admin/usuarios",
             icon: <Users size={18} />,
           },
           {
             label: "Revisiones",
-            href: "#",
-            icon: <ShieldCheck size={18} />,
+            href: "/admin/revisiones",
+            icon: <FileSearch size={18} />,
           },
           {
             label: "Configuración",
@@ -85,7 +85,7 @@ export default function DashboardShell({
           {
             label: "Mis procesos",
             href: "#",
-            icon: <FileText size={18} />,
+            icon: <FileSearch size={18} />,
           },
           {
             label: "Perfil",
@@ -100,7 +100,6 @@ export default function DashboardShell({
         <div className="h-2 w-full bg-[#0f5c3a]" />
 
         <div className="grid min-h-[84vh] lg:grid-cols-[290px_1fr]">
-          {/* Sidebar */}
           <aside className="border-b border-neutral-200 bg-[#f7faf7] px-6 py-7 lg:border-b-0 lg:border-r">
             <div className="mb-8">
               <div className="flex items-center gap-3">
@@ -137,8 +136,9 @@ export default function DashboardShell({
                 <nav className="space-y-2">
                   {mainNav.map((item) => {
                     const active =
-                      pathname === item.href ||
-                      (item.href !== "#" && pathname.startsWith(item.href));
+                      item.href !== "#" &&
+                      (pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`));
 
                     return (
                       <SidebarLink
@@ -159,16 +159,33 @@ export default function DashboardShell({
                 </p>
 
                 <div className="space-y-3">
-                  <QuickMiniCard
-                    title="Nueva cohorte"
-                    description="Crear y diligenciar una solicitud"
-                    href="/solicitud-cohorte/informacion"
-                  />
-                  <QuickMiniCard
-                    title="Último borrador"
-                    description="Continuar el flujo pendiente"
-                    href="/solicitud-cohorte/descripcion"
-                  />
+                  {activeRole === "admin" ? (
+                    <>
+                      <QuickMiniCard
+                        title="Revisión pendiente"
+                        description="Abrir bandeja de revisiones"
+                        href="/admin/revisiones"
+                      />
+                      <QuickMiniCard
+                        title="Administrar usuarios"
+                        description="Gestionar roles y estados"
+                        href="/admin/usuarios"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <QuickMiniCard
+                        title="Nueva cohorte"
+                        description="Crear y diligenciar una solicitud"
+                        href="/solicitud-cohorte/informacion"
+                      />
+                      <QuickMiniCard
+                        title="Último borrador"
+                        description="Continuar el flujo pendiente"
+                        href="/solicitud-cohorte/descripcion"
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -182,9 +199,7 @@ export default function DashboardShell({
             </div>
           </aside>
 
-          {/* Main */}
           <div className="bg-[#fcfcfc]">
-            {/* Top navbar */}
             <div className="border-b border-neutral-200 bg-white px-6 py-5 md:px-10">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
@@ -209,7 +224,7 @@ export default function DashboardShell({
                     <Search size={16} className="mr-2 text-neutral-400" />
                     <input
                       type="text"
-                      placeholder="Buscar solicitudes, programas, cohortes..."
+                      placeholder="Buscar solicitudes, programas, usuarios..."
                       className="w-full min-w-[240px] bg-transparent text-sm outline-none placeholder:text-neutral-400"
                     />
                   </div>
