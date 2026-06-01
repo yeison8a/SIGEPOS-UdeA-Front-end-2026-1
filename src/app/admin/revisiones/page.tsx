@@ -1,3 +1,4 @@
+"use client";
 import {
   CheckCircle2,
   Clock3,
@@ -9,35 +10,166 @@ import DashboardShell from "../../../../components/dashboard/DashboardShell";
 import DashboardCard from "../../../../components/dashboard/DashboardCard";
 import KpiCard from "../../../../components/dashboard/KpiCard";
 import StatusBadge from "../../../../components/dashboard/StatusBadge";
+import { useEffect, useState } from "react";
 
-const revisiones = [
-  {
-    codigo: "REV-001",
-    solicitud: "SOL-2026-001",
-    programa: "Ingeniería de Sistemas",
-    revisor: "Laura Pérez",
-    prioridad: "Alta",
-    estado: "En revisión",
-  },
-  {
-    codigo: "REV-002",
-    solicitud: "SOL-2026-002",
-    programa: "Ciencia de Datos",
-    revisor: "Daniel Rojas",
-    prioridad: "Media",
-    estado: "Pendiente anexos",
-  },
-  {
-    codigo: "REV-003",
-    solicitud: "SOL-2026-004",
-    programa: "Maestría en Educación",
-    revisor: "Laura Pérez",
-    prioridad: "Baja",
-    estado: "Enviada",
-  },
-];
+type CohortApplication = {
+  id: string;
+  numeroActa: string;
+  fechaActaAprobacion: string;
+  perfilAspirante: string;
+  correoDocumentacion: string;
+  diasHabilesRecepcion: number;
+  puntajeMinimoCorte: number;
+  cupoMinCohorte: number;
+  cupoMaxCohorte: number;
+  cupoEstudiantes: number;
+  plazasDisponibles: boolean;
+  estado: string;
+  enviada: boolean;
+  rutaDocumento: string;
+
+  documento: {
+    id: string;
+    nombre: string;
+    url: string;
+    fechaSubida: string;
+  };
+
+  programa: {
+    codigo: number;
+    nombre: string;
+    unidadAcademica: {
+      nombre: string;
+    };
+  };
+
+  usuario: {
+    id: string;
+    username: string;
+    correo: string;
+  };
+};
+
+type Revision = {
+  id: string;
+  priority: string;
+  status: string;
+  observations: string;
+  reviewDate: string;
+};
 
 export default function AdminRevisionesPage() {
+const [revisiones, setRevisiones] = useState<Revision[]>([]);
+  const [solicitudes, setSolicitudes] = useState<CohortApplication[]>([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const cargarSolicitudes = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/cohort-applications"
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al obtener solicitudes");
+      }
+
+      const data = await response.json();
+
+      setSolicitudes(data);
+      console.log(solicitudes);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  cargarSolicitudes();
+  cargarRevisiones();
+}, []);
+
+const [openViewModal, setOpenViewModal] = useState(false);
+
+const [solicitudSeleccionada, setSolicitudSeleccionada] =
+  useState<CohortApplication | null>(null);
+
+
+  const [openResolverModal, setOpenResolverModal] = useState(false);
+
+const [revisionForm, setRevisionForm] = useState({
+  priority: "",
+  status: "",
+  observations: "",
+});
+
+const crearRevision = async () => {
+  try {
+    const reviewerId = localStorage.getItem("userId");
+
+    const response = await fetch(
+      "http://localhost:8080/api/revisions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cohortApplicationId: solicitudSeleccionada?.id,
+          reviewerId: solicitudSeleccionada?.usuario.id,
+          priority: revisionForm.priority,
+          status: revisionForm.status,
+          observations: revisionForm.observations,
+        }),
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error("Error creando revisión");
+    }
+
+    alert("Revisión creada correctamente");
+
+    setOpenResolverModal(false);
+  } catch (error) {
+    console.error(error);
+    alert("No fue posible crear la revisión");
+  }
+};
+
+
+const pendientesRevision = solicitudes.filter(
+  (s) => s.estado === "PENDIENTE"
+).length;
+
+const devueltas = solicitudes.filter(
+  (s) => s.estado === "DEVUELTA"
+).length;
+
+const cerradas = solicitudes.filter(
+  (s) => s.estado === "REVISADA"
+).length;
+
+
+const cargarRevisiones = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:8080/api/revisions"
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al obtener revisiones");
+    }
+
+    const data = await response.json();
+
+    setRevisiones(data);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   return (
     <DashboardShell
       title="Revisiones"
@@ -49,28 +181,23 @@ export default function AdminRevisionesPage() {
         <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             title="Pendientes revisión"
-            value="7"
+            value={pendientesRevision.toString()}
             change="Bandeja actual"
             icon={<FileSearch size={18} />}
             tone="green"
           />
-          <KpiCard
-            title="Alta prioridad"
-            value="2"
-            change="Requieren atención hoy"
-            icon={<TriangleAlert size={18} />}
-            tone="cream"
+
+                    <KpiCard
+            title="Devueltas"
+            value={devueltas.toString()}
+            change=""
+            icon={<CheckCircle2 size={18} />}
+            tone="green"
           />
-          <KpiCard
-            title="En curso"
-            value="4"
-            change="Asignadas a revisores"
-            icon={<Clock3 size={18} />}
-            tone="white"
-          />
+
           <KpiCard
             title="Cerradas"
-            value="11"
+            value={cerradas.toString()}
             change="Proceso finalizado"
             icon={<CheckCircle2 size={18} />}
             tone="green"
@@ -84,64 +211,46 @@ export default function AdminRevisionesPage() {
             icon={<ShieldCheck size={18} />}
             tone="white"
           >
-            <div className="mb-5 grid gap-4 md:grid-cols-3">
-              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 outline-none">
-                <option>Todos los revisores</option>
-                <option>Laura Pérez</option>
-                <option>Daniel Rojas</option>
-              </select>
-
-              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 outline-none">
-                <option>Todas las prioridades</option>
-                <option>Alta</option>
-                <option>Media</option>
-                <option>Baja</option>
-              </select>
-
-              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 outline-none">
-                <option>Todos los estados</option>
-                <option>En revisión</option>
-                <option>Pendiente anexos</option>
-                <option>Enviada</option>
-              </select>
-            </div>
 
             <div className="overflow-hidden rounded-[18px] border border-neutral-200 bg-white">
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead className="bg-[#f8faf8]">
                     <tr className="text-left text-neutral-600">
-                      <th className="px-4 py-3 font-semibold">Código</th>
-                      <th className="px-4 py-3 font-semibold">Solicitud</th>
+                      <th className="px-4 py-3 font-semibold">ID</th>
                       <th className="px-4 py-3 font-semibold">Programa</th>
-                      <th className="px-4 py-3 font-semibold">Revisor</th>
-                      <th className="px-4 py-3 font-semibold">Prioridad</th>
+                      <th className="px-4 py-3 font-semibold">Solicitante</th>
                       <th className="px-4 py-3 font-semibold">Estado</th>
                       <th className="px-4 py-3 font-semibold">Acciones</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {revisiones.map((row) => (
-                      <tr key={row.codigo} className="border-t border-neutral-200">
+                    {solicitudes.map((row) => (
+                      <tr key={row.id} className="border-t border-neutral-200">
                         <td className="px-4 py-3 font-semibold text-[#0f5c3a]">
-                          {row.codigo}
+                          {row.id}
                         </td>
-                        <td className="px-4 py-3 text-neutral-700">{row.solicitud}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.programa}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.revisor}</td>
-                        <td className="px-4 py-3">
-                          <PriorityBadge value={row.prioridad} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={row.estado} />
-                        </td>
+                        <td className="px-4 py-3 text-neutral-700">{row.programa.nombre}</td>
+                        <td className="px-4 py-3 text-neutral-700">{row.usuario.username}</td>
+                        <td className="px-4 py-3 text-neutral-700">{row.estado}</td>
+
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <button className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50">
+                            <button 
+                            onClick={() => {
+                              setSolicitudSeleccionada(row);
+                              setOpenViewModal(true);
+                            }}
+                            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50">
                               Ver
                             </button>
-                            <button className="rounded-lg bg-[#0f5c3a] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0b4a2f]">
+                            <button 
+                            onClick={() => {
+                              setSolicitudSeleccionada(row);
+                              setOpenResolverModal(true);
+                            }}
+                            className="rounded-lg bg-[#0f5c3a] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0b4a2f]">
                               Resolver
                             </button>
                           </div>
@@ -154,75 +263,234 @@ export default function AdminRevisionesPage() {
             </div>
           </DashboardCard>
 
-          <DashboardCard
-            title="Control del equipo revisor"
-            subtitle="Carga actual y estado del proceso."
-            icon={<FileSearch size={18} />}
-            tone="green"
-          >
-            <div className="space-y-4">
-              <ReviewerCard
-                name="Laura Pérez"
-                assigned="3 revisiones"
-                status="Alta carga"
-              />
-              <ReviewerCard
-                name="Daniel Rojas"
-                assigned="2 revisiones"
-                status="Carga media"
-              />
-              <ReviewerCard
-                name="Equipo académico"
-                assigned="2 validaciones"
-                status="Disponible"
-              />
-            </div>
-
-            <div className="mt-6 rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm">
-              <p className="text-sm font-semibold text-neutral-900">
-                Observación general
-              </p>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">
-                Las revisiones de alta prioridad deben resolverse antes del cierre
-                semanal para evitar retrasos en radicación.
-              </p>
-            </div>
-          </DashboardCard>
         </div>
       </div>
+
+      {openViewModal && solicitudSeleccionada && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+      <h2 className="mb-6 text-xl font-bold">
+        Detalle de la solicitud
+      </h2>
+
+      <div className="grid gap-4 md:grid-cols-2">
+
+        <div>
+          <p className="text-xs text-neutral-500">ID</p>
+          <p>{solicitudSeleccionada.id}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Estado</p>
+          <p>{solicitudSeleccionada.estado}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Número Acta</p>
+          <p>{solicitudSeleccionada.numeroActa}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Fecha Acta</p>
+          <p>{solicitudSeleccionada.fechaActaAprobacion}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Programa</p>
+          <p>{solicitudSeleccionada.programa?.nombre}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Código Programa</p>
+          <p>{solicitudSeleccionada.programa?.codigo}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Unidad Académica</p>
+          <p>
+            {solicitudSeleccionada.programa?.unidadAcademica?.nombre}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">Perfil Aspirante</p>
+          <p>{solicitudSeleccionada.perfilAspirante}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Correo Documentación
+          </p>
+          <p>{solicitudSeleccionada.correoDocumentacion}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Días Hábiles Recepción
+          </p>
+          <p>{solicitudSeleccionada.diasHabilesRecepcion}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Puntaje Mínimo Corte
+          </p>
+          <p>{solicitudSeleccionada.puntajeMinimoCorte}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Cupo Mínimo
+          </p>
+          <p>{solicitudSeleccionada.cupoMinCohorte}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Cupo Máximo
+          </p>
+          <p>{solicitudSeleccionada.cupoMaxCohorte}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Cupo Estudiantes
+          </p>
+          <p>{solicitudSeleccionada.cupoEstudiantes}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Plazas Disponibles
+          </p>
+          <p>
+            {solicitudSeleccionada.plazasDisponibles
+              ? "Sí"
+              : "No"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Usuario
+          </p>
+          <p>{solicitudSeleccionada.usuario?.username}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-neutral-500">
+            Correo Usuario
+          </p>
+          <p>{solicitudSeleccionada.usuario?.correo}</p>
+        </div>
+
+        <div>
+  <p className="text-xs text-neutral-500">
+    Documento
+  </p>
+
+  <a
+    href={solicitudSeleccionada.documento?.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-600 underline"
+  >
+    
+    Ver documento
+  </a>
+  
+</div>
+
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={() => setOpenViewModal(false)}
+          className="rounded-lg bg-[#0f5c3a] px-4 py-2 text-white"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+{openResolverModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="w-full max-w-lg rounded-2xl bg-white p-6">
+      <h2 className="mb-4 text-lg font-bold">
+        Crear revisión
+      </h2>
+
+      <div className="space-y-4">
+        <select
+          value={revisionForm.priority}
+          onChange={(e) =>
+            setRevisionForm({
+              ...revisionForm,
+              priority: e.target.value,
+            })
+          }
+          className="w-full rounded-lg border p-3"
+        >
+          <option value="">Seleccione prioridad</option>
+          <option value="ALTA">Alta</option>
+          <option value="MEDIA">Media</option>
+          <option value="BAJA">Baja</option>
+        </select>
+
+        <select
+          value={revisionForm.status}
+          onChange={(e) =>
+            setRevisionForm({
+              ...revisionForm,
+              status: e.target.value,
+            })
+          }
+          className="w-full rounded-lg border p-3"
+        >
+          <option value="">Seleccione estado</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="REVISADA">Revisada</option>
+          <option value="DEVUELTA">Devuelta</option>         
+        </select>
+
+        <textarea
+          rows={4}
+          placeholder="Observaciones"
+          value={revisionForm.observations}
+          onChange={(e) =>
+            setRevisionForm({
+              ...revisionForm,
+              observations: e.target.value,
+            })
+          }
+          className="w-full rounded-lg border p-3"
+        />
+      </div>
+
+      <div className="mt-6 flex justify-end gap-3">
+        <button
+          onClick={() => setOpenResolverModal(false)}
+          className="rounded-lg border px-4 py-2"
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={crearRevision}
+          className="rounded-lg bg-[#0f5c3a] px-4 py-2 text-white"
+        >
+          Guardar revisión
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </DashboardShell>
   );
 }
 
-function PriorityBadge({ value }: { value: string }) {
-  const styles =
-    value === "Alta"
-      ? "bg-rose-50 text-rose-600"
-      : value === "Media"
-      ? "bg-[#fffaf0] text-[#8a6d1f]"
-      : "bg-green-100 text-[#0f5c3a]";
 
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>
-      {value}
-    </span>
-  );
-}
-
-function ReviewerCard({
-  name,
-  assigned,
-  status,
-}: {
-  name: string;
-  assigned: string;
-  status: string;
-}) {
-  return (
-    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm">
-      <p className="text-base font-bold text-neutral-900">{name}</p>
-      <p className="mt-2 text-sm text-neutral-600">{assigned}</p>
-      <p className="mt-3 text-sm font-semibold text-[#0f5c3a]">{status}</p>
-    </div>
-  );
-}
