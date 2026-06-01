@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BadgeCheck,
   BookOpenCheck,
@@ -21,32 +21,88 @@ import { solicitudInputClass } from "../../../../lib/solicitud-cohorte/ui";
 
 type FormData = {
   perfilAspirante: string;
-  mecanismoIngreso: string;
-  numeroAdmitidos: string;
-  criteriosSeleccion: string;
-  requisitosIngreso: string;
-  ciudadOferta: string;
-  criteriosClasificacion: string;
-  modalidadProceso: string;
-  tipoPrueba: string;
+  correoDocumentos: string;
+  diasHabiles: string;
+  puntajeMinimo: string;
+  cupoMinimo: string;
+  cupoMaximo: string;
+  cuposRiesgo: string;
+  plazasDisponibles: string;
 };
 
 export default function DescripcionPage() {
+
+
   const [form, setForm] = useState<FormData>({
     perfilAspirante: "",
-    mecanismoIngreso: "",
-    numeroAdmitidos: "",
-    criteriosSeleccion: "",
-    requisitosIngreso: "",
-    ciudadOferta: "",
-    criteriosClasificacion: "",
-    modalidadProceso: "",
-    tipoPrueba: "",
+    correoDocumentos: "",
+    diasHabiles: "",
+    puntajeMinimo: "",
+    cupoMinimo: "",
+    cupoMaximo: "",
+    cuposRiesgo: "",
+    plazasDisponibles: "",
   });
+
+const isFormValid = Object.values(form).every(
+  (value) => value.trim() !== ""
+);
+
+  const STORAGE_KEY = "solicitud-cohorte-descripcion";
+  const [loaded, setLoaded] = useState(false);
+  const PROGRESS_KEY = "solicitud-cohorte-step";
+
 
   function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  useEffect(() => {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+
+  if (savedData) {
+    setForm(JSON.parse(savedData));
+  }
+
+  setLoaded(true);
+}, []);
+
+useEffect(() => {
+  localStorage.setItem(
+    "solicitud-cohorte-step",
+    "2"
+  );
+}, []);
+
+useEffect(() => {
+  if (!loaded) return;
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(form)
+  );
+}, [form, loaded]);
+
+
+  let nextPage = "";
+
+const informacion = localStorage.getItem(
+  "solicitud-cohorte-informacion"
+);
+
+const tipoSolicitud = informacion
+  ? JSON.parse(informacion).tipoSolicitud
+  : "";
+
+if (form.plazasDisponibles === "Sí") {
+  nextPage = "/solicitud-cohorte/cohorte";
+} else {
+  nextPage =
+    tipoSolicitud === "renovacion"
+      ? "/solicitud-cohorte/anexos-2"
+      : "/solicitud-cohorte/anexos-1";
+}
+
 
   return (
     <SolicitudShell
@@ -76,149 +132,130 @@ export default function DescripcionPage() {
           </FieldCard>
 
           <div className="grid gap-5 md:grid-cols-2">
-            <FieldCard
-              label="Mecanismo de ingreso"
-              required
-              icon={<ListChecks size={16} />}
-              tone="white"
-            >
-              <select
-                value={form.mecanismoIngreso}
-                onChange={(e) => updateField("mecanismoIngreso", e.target.value)}
-                className={solicitudInputClass}
-              >
-                <option value="">Seleccione una opción</option>
-                <option value="entrevista">Entrevista</option>
-                <option value="prueba">Prueba</option>
-                <option value="mixto">Mixto</option>
-              </select>
-            </FieldCard>
 
-            <FieldCard
-              label="Número de admitidos por cohorte"
-              required
-              icon={<Users size={16} />}
-              tone="creamTint"
-            >
-              <select
-                value={form.numeroAdmitidos}
-                onChange={(e) => updateField("numeroAdmitidos", e.target.value)}
-                className={solicitudInputClass}
-              >
-                <option value="">Seleccione una opción</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-                <option value="25">25</option>
-                <option value="30">30</option>
-              </select>
-            </FieldCard>
+  <FieldCard
+    label="Correo para recepción de documentos"
+    required
+    icon={<FileText size={16} />}
+    tone="white"
+  >
+    <input
+      type="email"
+      value={form.correoDocumentos}
+      onChange={(e) =>
+        updateField("correoDocumentos", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Criterios de selección"
-              required
-              icon={<FileSearch size={16} />}
-              tone="greenTint"
-            >
-              <textarea
-                rows={4}
-                placeholder="Describa los criterios de selección..."
-                value={form.criteriosSeleccion}
-                onChange={(e) => updateField("criteriosSeleccion", e.target.value)}
-                className={`${solicitudInputClass} resize-none`}
-              />
-            </FieldCard>
+  <FieldCard
+    label="Días hábiles de recepción"
+    required
+    icon={<ListChecks size={16} />}
+    tone="creamTint"
+  >
+    <input
+      type="number"
+      value={form.diasHabiles}
+      onChange={(e) =>
+        updateField("diasHabiles", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Requisitos de ingreso"
-              required
-              icon={<BookOpenCheck size={16} />}
-              tone="white"
-            >
-              <textarea
-                rows={4}
-                placeholder="Detalle los requisitos de ingreso..."
-                value={form.requisitosIngreso}
-                onChange={(e) => updateField("requisitosIngreso", e.target.value)}
-                className={`${solicitudInputClass} resize-none`}
-              />
-            </FieldCard>
+  <FieldCard
+    label="Puntaje mínimo de corte"
+    required
+    icon={<BadgeCheck size={16} />}
+    tone="greenTint"
+  >
+    <input
+      type="number"
+      value={form.puntajeMinimo}
+      onChange={(e) =>
+        updateField("puntajeMinimo", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Ciudad o lugar de oferta"
-              required
-              icon={<MapPin size={16} />}
-              tone="white"
-            >
-              <input
-                type="text"
-                placeholder="Ingrese la ciudad"
-                value={form.ciudadOferta}
-                onChange={(e) => updateField("ciudadOferta", e.target.value)}
-                className={solicitudInputClass}
-              />
-            </FieldCard>
+  <FieldCard
+    label="Cupo mínimo"
+    required
+    icon={<Users size={16} />}
+    tone="white"
+  >
+    <input
+      type="number"
+      value={form.cupoMinimo}
+      onChange={(e) =>
+        updateField("cupoMinimo", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Criterios de clasificación"
-              required
-              icon={<BadgeCheck size={16} />}
-              tone="creamTint"
-            >
-              <input
-                type="text"
-                placeholder="Ingrese el criterio"
-                value={form.criteriosClasificacion}
-                onChange={(e) =>
-                  updateField("criteriosClasificacion", e.target.value)
-                }
-                className={solicitudInputClass}
-              />
-            </FieldCard>
+  <FieldCard
+    label="Cupo máximo"
+    required
+    icon={<Users size={16} />}
+    tone="creamTint"
+  >
+    <input
+      type="number"
+      value={form.cupoMaximo}
+      onChange={(e) =>
+        updateField("cupoMaximo", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Modalidad del proceso"
-              required
-              icon={<Building2 size={16} />}
-              tone="greenTint"
-            >
-              <select
-                value={form.modalidadProceso}
-                onChange={(e) => updateField("modalidadProceso", e.target.value)}
-                className={solicitudInputClass}
-              >
-                <option value="">Seleccione una opción</option>
-                <option value="presencial">Presencial</option>
-                <option value="virtual">Virtual</option>
-                <option value="hibrida">Híbrida</option>
-              </select>
-            </FieldCard>
+  <FieldCard
+    label="Cupos para población en riesgo"
+    required
+    icon={<Users size={16} />}
+    tone="greenTint"
+  >
+    <input
+      type="number"
+      value={form.cuposRiesgo}
+      onChange={(e) =>
+        updateField("cuposRiesgo", e.target.value)
+      }
+      className={solicitudInputClass}
+    />
+  </FieldCard>
 
-            <FieldCard
-              label="Tipo de prueba o evaluación"
-              required
-              icon={<FileText size={16} />}
-              tone="white"
-            >
-              <select
-                value={form.tipoPrueba}
-                onChange={(e) => updateField("tipoPrueba", e.target.value)}
-                className={solicitudInputClass}
-              >
-                <option value="">Seleccione una opción</option>
-                <option value="escrita">Escrita</option>
-                <option value="oral">Oral</option>
-                <option value="entrevista">Entrevista</option>
-                <option value="mixta">Mixta</option>
-              </select>
-            </FieldCard>
-          </div>
+  <FieldCard
+    label="¿Existen plazas disponibles?"
+    required
+    icon={<Building2 size={16} />}
+    tone="white"
+  >
+    <select
+      value={form.plazasDisponibles}
+      onChange={(e) =>
+        updateField("plazasDisponibles", e.target.value)
+      }
+      className={solicitudInputClass}
+    >
+      <option value="">Seleccione una opción</option>
+      <option value="Sí">Sí</option>
+      <option value="No">No</option>
+    </select>
+  </FieldCard>
+
+</div>
         </div>
       </SectionCard>
 
       <SolicitudActions
         prevHref="/solicitud-cohorte/informacion"
-        nextHref="/solicitud-cohorte/cohorte"
+        nextHref={nextPage}
+        disabled={!isFormValid}
       />
     </SolicitudShell>
   );

@@ -1,6 +1,5 @@
 "use client";
-
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BellRing,
@@ -14,6 +13,7 @@ import {
   Hash,
   ShieldCheck,
 } from "lucide-react";
+
 import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
 import SectionCard from "../../../../components/solicitud/SectionCard";
 import FieldCard from "../../../../components/solicitud/FieldCard";
@@ -31,7 +31,25 @@ type FormData = {
   codigoPrograma: string;
 };
 
+type UnidadAcademica = {
+  id: string;
+  nombre: string;
+};
+
+type Programa = {
+  id: string;
+  codigo: number;
+  nombre: string;
+  unidadAcademica: {
+    id: string;
+    nombre: string;
+  };
+};
+
 export default function InformacionPage() {
+
+  const [loaded, setLoaded] = useState(false);
+
   const [form, setForm] = useState<FormData>({
     tipoSolicitud: "",
     fechaSolicitud: "",
@@ -43,6 +61,16 @@ export default function InformacionPage() {
     codigoPrograma: "",
   });
 
+  
+
+const [unidadesAcademicas, setUnidadesAcademicas] = useState<
+  UnidadAcademica[]
+>([]);
+
+const [programas, setProgramas] = useState<Programa[]>([]);
+
+const [programasFiltrados, setProgramasFiltrados] = useState<Programa[]>([]);
+
   const completedFields = useMemo(() => {
     return Object.values(form).filter((value) => value.trim() !== "").length;
   }, [form]);
@@ -51,9 +79,127 @@ export default function InformacionPage() {
     (completedFields / Object.keys(form).length) * 100
   );
 
+  const isFormValid = Object.values(form).every(
+  (value) => value.trim() !== ""
+);
+
   function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+const STORAGE_KEY = "solicitud-cohorte-informacion";
+const PROGRESS_KEY = "solicitud-cohorte-step";
+
+useEffect(() => {
+  cargarUnidadesAcademicas();
+  cargarProgramas();
+
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    setForm(JSON.parse(savedData));
+  }
+
+  setLoaded(true);
+}, []);
+
+useEffect(() => {
+  localStorage.setItem(
+    "solicitud-cohorte-step",
+    "1"
+  );
+}, []);
+
+useEffect(() => {
+  if (!loaded) return;
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(form)
+  );
+}, [form, loaded]);
+
+useEffect(() => {
+  if (!form.unidadAcademica || programas.length === 0) return;
+
+  const filtrados = programas.filter(
+    (programa) =>
+      programa.unidadAcademica.id === form.unidadAcademica
+  );
+
+  setProgramasFiltrados(filtrados);
+}, [form.unidadAcademica, programas]);
+
+const cargarUnidadesAcademicas = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:8080/api/academic-units"
+    );
+
+    if (!response.ok) {
+      throw new Error("Error cargando unidades académicas");
+    }
+
+    const data = await response.json();
+    setUnidadesAcademicas(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const cargarProgramas = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:8080/api/programs"
+    );
+
+    if (!response.ok) {
+      throw new Error("Error cargando programas");
+    }
+
+    const data: Programa[] = await response.json();
+
+    setProgramas(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleUnidadAcademicaChange = async (
+  unidadAcademicaId: string
+) => {
+  updateField("unidadAcademica", unidadAcademicaId);
+
+  updateField("programa", "");
+  updateField("codigoPrograma", "");
+
+  const filtrados = programas.filter(
+    (programa) =>
+      programa.unidadAcademica.id === unidadAcademicaId
+  );
+  setProgramasFiltrados(filtrados);
+};
+
+const handleProgramaChange = (
+  programaId: string
+) => {
+  updateField("programa", programaId);
+
+  const programaSeleccionado =
+    programasFiltrados.find(
+      (p) => p.id === programaId
+    );
+
+  if (programaSeleccionado) {
+    updateField(
+      "codigoPrograma",
+      String(programaSeleccionado.codigo)
+    );
+
+    localStorage.setItem(
+      "programId",
+      programaSeleccionado.id
+    );
+  }
+};
 
   return (
     <SolicitudShell
@@ -81,9 +227,8 @@ export default function InformacionPage() {
                   className={solicitudInputClass}
                 >
                   <option value="">Seleccione una opción</option>
-                  <option value="apertura">Apertura</option>
-                  <option value="renovacion">Renovación</option>
-                  <option value="modificacion">Modificación</option>
+                  <option value="apertura">Solicitud de apertura de cohorte</option>
+                  <option value="renovacion">Solicitud de modificación de resolución de apertura de cohorte</option>
                 </select>
               </FieldCard>
 
@@ -166,17 +311,23 @@ export default function InformacionPage() {
                 tone="creamTint"
               >
                 <select
-                  value={form.unidadAcademica}
-                  onChange={(e) =>
-                    updateField("unidadAcademica", e.target.value)
-                  }
-                  className={solicitudInputClass}
-                >
-                  <option value="">Seleccione una opción</option>
-                  <option value="ingenieria">Facultad de Ingeniería</option>
-                  <option value="ciencias">Facultad de Ciencias Exactas</option>
-                  <option value="sociales">Facultad de Ciencias Sociales</option>
-                </select>
+  value={form.unidadAcademica}
+  onChange={(e) =>
+    handleUnidadAcademicaChange(e.target.value)
+  }
+  className={solicitudInputClass}
+>
+  <option value="">Seleccione una opción</option>
+
+  {unidadesAcademicas.map((unidad) => (
+    <option
+      key={unidad.id}
+      value={unidad.id}
+    >
+      {unidad.nombre}
+    </option>
+  ))}
+</select>
               </FieldCard>
 
               <FieldCard
@@ -186,15 +337,23 @@ export default function InformacionPage() {
                 tone="white"
               >
                 <select
-                  value={form.programa}
-                  onChange={(e) => updateField("programa", e.target.value)}
-                  className={solicitudInputClass}
-                >
-                  <option value="">Seleccione una opción</option>
-                  <option value="sistemas">Ingeniería de Sistemas</option>
-                  <option value="datos">Ciencia de Datos</option>
-                  <option value="software">Arquitectura de Software</option>
-                </select>
+  value={form.programa}
+  onChange={(e) =>
+    handleProgramaChange(e.target.value)
+  }
+  className={solicitudInputClass}
+>
+  <option value="">Seleccione una opción</option>
+
+  {programasFiltrados.map((programa) => (
+    <option
+      key={programa.id}
+      value={programa.id}
+    >
+      {programa.nombre}
+    </option>
+  ))}
+</select>
               </FieldCard>
 
               <FieldCard
@@ -203,18 +362,19 @@ export default function InformacionPage() {
                 icon={<Hash size={16} />}
                 tone="creamTint"
               >
-                <input
-                  type="text"
-                  placeholder="Ej. 50701"
-                  value={form.codigoPrograma}
-                  onChange={(e) => updateField("codigoPrograma", e.target.value)}
-                  className={solicitudInputClass}
-                />
+<input
+  type="text"
+  value={form.codigoPrograma}
+  readOnly
+  className={solicitudInputClass}
+/>
               </FieldCard>
             </div>
           </SectionCard>
 
-          <SolicitudActions nextHref="/solicitud-cohorte/descripcion" />
+          <SolicitudActions nextHref="/solicitud-cohorte/descripcion" 
+          disabled={!isFormValid}
+          />
         </div>
 
         <aside className="space-y-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CircleAlert,
   ClipboardList,
@@ -51,6 +51,32 @@ function UploadCard({ title, required = false }: UploadCardProps) {
 }
 
 export default function Anexos2Page() {
+const PROGRESS_KEY = "solicitud-cohorte-step";
+  const [prevPage, setPrevPage] = useState(
+  "/solicitud-cohorte/cohorte"
+);
+
+useEffect(() => {
+  const descripcion = localStorage.getItem(
+    "solicitud-cohorte-descripcion"
+  );
+
+  if (!descripcion) return;
+
+  const data = JSON.parse(descripcion);
+
+  if (data.plazasDisponibles === "No") {
+    setPrevPage("/solicitud-cohorte/descripcion");
+  }
+}, []);
+
+useEffect(() => {
+  localStorage.setItem(
+    "solicitud-cohorte-step",
+    "3"
+  );
+}, []);
+
   return (
     <SolicitudShell
       currentStep={5}
@@ -100,7 +126,7 @@ export default function Anexos2Page() {
         </SectionCard>
 
         <SolicitudActions
-          prevHref="/solicitud-cohorte/anexos-1"
+          prevHref={prevPage}
           nextHref="/solicitud-cohorte/enviar"
         />
       </div>

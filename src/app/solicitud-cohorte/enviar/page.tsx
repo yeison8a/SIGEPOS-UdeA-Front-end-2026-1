@@ -12,6 +12,7 @@ import {
 import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
 import SectionCard from "../../../../components/solicitud/SectionCard";
 import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+import { useEffect } from "react";
 
 function ReviewCard({
   title,
@@ -52,6 +53,14 @@ function ReviewCard({
 }
 
 export default function EnviarPage() {
+  const PROGRESS_KEY = "solicitud-cohorte-step";
+  
+  useEffect(() => {
+  localStorage.setItem(
+    "solicitud-cohorte-step",
+    "5"
+  );
+}, []);
   return (
     <SolicitudShell
       currentStep={6}

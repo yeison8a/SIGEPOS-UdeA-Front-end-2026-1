@@ -14,7 +14,8 @@ import {
   User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 
 export default function LoginForm() {
   const router = useRouter();
@@ -23,8 +24,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("admin@udea.edu.co");
-  const [password, setPassword] = useState("123456");
+  const [correo, setCorreo] = useState("admin@udea.edu.co");
+  const [contrasena, setContrasena] = useState("123456");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,33 +36,74 @@ export default function LoginForm() {
     setError("");
     setInfoMessage("");
 
-    if (tab === "register") {
-      setInfoMessage(
-        "El diseño de registro quedó listo, pero aún no hemos conectado el endpoint de registro. Por ahora puedes ingresar con un usuario demo."
-      );
-      return;
+if (tab === "register") {
+
+  const response = await fetch(
+    "http://localhost:8080/api/register",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        correo,
+        contrasena,
+        role: "USER",
+      })
     }
+  );
+
+  const data = await response.json();
+
+  if(!response.ok){
+    setError(data.message || "No se pudo registrar");
+    return;
+  }
+
+  setInfoMessage("Registro exitoso");
+
+  setTab("login");
+
+  return;
+}
 
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("http://localhost:8080/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ correo, contrasena }),
       });
 
       const data = await response.json();
 
-      if (!response.ok || !data.ok) {
+      if (!response.ok) {
         setError(data.message || "Credenciales inválidas");
         return;
       }
+      console.log(data);
+      const role = (data?.usuario?.rol || "").toUpperCase();
 
-      router.push(data.redirectTo);
-      router.refresh();
+localStorage.setItem("userId", data.usuario.id);
+localStorage.setItem("role", role);
+
+switch (role) {
+  case "ADMIN":
+    router.push("/admin/dashboard");
+    break;
+
+  case "USER":
+    router.push("/usuario/dashboard");
+    break;
+
+  default:
+    router.push("/usuario/dashboard");
+}
+
+
     } catch {
       setError("Ocurrió un error al iniciar sesión");
     } finally {
@@ -313,8 +355,8 @@ export default function LoginForm() {
                       <input
                         type="email"
                         placeholder="correo@ejemplo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={correo}
+                        onChange={(e) => setCorreo(e.target.value)}
                         className="w-full bg-transparent text-sm outline-none"
                       />
                     </div>
@@ -329,8 +371,8 @@ export default function LoginForm() {
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={contrasena}
+                        onChange={(e) => setContrasena(e.target.value)}
                         className="w-full bg-transparent text-sm outline-none"
                       />
                       <button

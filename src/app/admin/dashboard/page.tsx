@@ -1,3 +1,4 @@
+"use client";
 import {
   Activity,
   BellRing,
@@ -14,38 +15,95 @@ import DashboardCard from "../../../../components/dashboard/DashboardCard";
 import KpiCard from "../../../../components/dashboard/KpiCard";
 import StatusBadge from "../../../../components/dashboard/StatusBadge";
 
-const recentSolicitudes = [
-  {
-    id: "SOL-2026-001",
-    programa: "Ingeniería de Sistemas",
-    cohorte: "2026-1",
-    estado: "En revisión",
-    fecha: "2026-04-18",
-  },
-  {
-    id: "SOL-2026-002",
-    programa: "Ciencia de Datos",
-    cohorte: "2026-1",
-    estado: "Pendiente anexos",
-    fecha: "2026-04-17",
-  },
-  {
-    id: "SOL-2026-003",
-    programa: "Arquitectura de Software",
-    cohorte: "2026-2",
-    estado: "Borrador",
-    fecha: "2026-04-16",
-  },
-  {
-    id: "SOL-2026-004",
-    programa: "Maestría en Educación",
-    cohorte: "2026-1",
-    estado: "Enviada",
-    fecha: "2026-04-15",
-  },
-];
+import { useEffect, useState } from "react";
+
+type Solicitud = {
+  id: string;
+  numeroActa: string;
+  fechaActaAprobacion: string;
+  programa: {
+    id: string;
+    codigo: number;
+    nombre: string;
+    unidadAcademica: {
+      id: string;
+      nombre: string;
+    };
+  };
+  perfilAspirante: string;
+  correoDocumentacion: string;
+  diasHabilesRecepcion: number;
+  puntajeMinimoCorte: number;
+  cupoMinCohorte: number;
+  cupoMaxCohorte: number;
+  cupoEstudiantes: number;
+  plazasDisponibles: boolean;
+  estado: "BORRADOR" | "PENDIENTE_ANEXOS" | "ENVIADA" | string;
+  enviada: boolean;
+  rutaDocumento: string;
+
+  usuario: {
+    id: string;
+    correo: string;
+    rol: string;
+  };
+};
+
 
 export default function AdminDashboardPage() {
+
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+useEffect(() => {
+  const fetchSolicitudes = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:8080/api/cohort-applications");
+      if (!res.ok) throw new Error("Error al obtener solicitudes");
+
+      const data: Solicitud[] = await res.json();
+      setSolicitudes(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error desconocido");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSolicitudes();
+}, []);
+
+  const solicitudesActivas = solicitudes.filter(
+    (s) => s.enviada === true
+  );
+
+  const anexosPendientes = solicitudes.filter(
+  (s) => !s.rutaDocumento || s.rutaDocumento.trim() === ""
+);
+
+const usuariosActivos = new Set(
+  solicitudes
+    .filter((s) => s.usuario)
+    .map((s) => s.usuario.id)
+);
+
+const totalUsuariosActivos = usuariosActivos.size;
+
+if (loading) {
+  return <p className="p-4">Cargando solicitudes...</p>;
+}
+
+if (error) {
+  return <p className="p-4 text-red-500">{error}</p>;
+}
+
   return (
     <DashboardShell
       title="Dashboard administrador"
@@ -57,91 +115,29 @@ export default function AdminDashboardPage() {
         <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             title="Solicitudes activas"
-            value="18"
-            change="+3 esta semana"
+            value={loading ? "..." : String(solicitudesActivas.length)}
+            change=""
             icon={<ClipboardList size={18} />}
             tone="green"
           />
-          <KpiCard
-            title="En revisión"
-            value="7"
-            change="2 priorizadas hoy"
-            icon={<ShieldCheck size={18} />}
-            tone="cream"
-          />
+
           <KpiCard
             title="Anexos pendientes"
-            value="4"
-            change="1 nueva alerta"
+            value={loading ? "..." : String(anexosPendientes.length)}
+            change=""
             icon={<Paperclip size={18} />}
             tone="white"
           />
           <KpiCard
             title="Usuarios activos"
-            value="24"
-            change="+5 ingresos recientes"
+            value={loading ? "..." : String(totalUsuariosActivos)}
+            change=""
             icon={<Users size={18} />}
             tone="green"
           />
         </section>
 
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-          <DashboardCard
-            title="Flujo administrativo"
-            subtitle="Vista general del estado operativo del portal."
-            icon={<FolderKanban size={18} />}
-            tone="green"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <InfoPanel
-                title="Solicitudes listas para validación"
-                value="5"
-                text="Documentación completa y listas para revisión formal."
-              />
-              <InfoPanel
-                title="Procesos con bloqueo"
-                value="2"
-                text="Requieren atención por inconsistencias detectadas."
-              />
-              <InfoPanel
-                title="Cohortes activas"
-                value="5"
-                text="Con seguimiento administrativo en este periodo."
-              />
-              <InfoPanel
-                title="Tiempo promedio de revisión"
-                value="2.4 días"
-                text="Promedio institucional actualizado."
-              />
-            </div>
-          </DashboardCard>
-
-          <DashboardCard
-            title="Alertas prioritarias"
-            subtitle="Elementos que requieren atención inmediata."
-            icon={<BellRing size={18} />}
-            tone="cream"
-          >
-            <div className="space-y-4">
-              <AlertItem
-                title="Solicitudes con anexos incompletos"
-                description="Hay 4 procesos con soportes faltantes."
-                priority="alta"
-              />
-              <AlertItem
-                title="Revisión final pendiente"
-                description="2 solicitudes están listas para aprobación."
-                priority="media"
-              />
-              <AlertItem
-                title="Cierre cercano de convocatoria"
-                description="Una cohorte cierra inscripciones en menos de 48 horas."
-                priority="baja"
-              />
-            </div>
-          </DashboardCard>
-        </div>
-
+        
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <DashboardCard
             title="Solicitudes recientes"
@@ -162,21 +158,6 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
 
-                  <tbody>
-                    {recentSolicitudes.map((row) => (
-                      <tr key={row.id} className="border-t border-neutral-200">
-                        <td className="px-4 py-3 font-semibold text-[#0f5c3a]">
-                          {row.id}
-                        </td>
-                        <td className="px-4 py-3 text-neutral-700">{row.programa}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.cohorte}</td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={row.estado} />
-                        </td>
-                        <td className="px-4 py-3 text-neutral-700">{row.fecha}</td>
-                      </tr>
-                    ))}
-                  </tbody>
                 </table>
               </div>
             </div>
@@ -236,34 +217,6 @@ function InfoPanel({
   );
 }
 
-function AlertItem({
-  title,
-  description,
-  priority,
-}: {
-  title: string;
-  description: string;
-  priority: "alta" | "media" | "baja";
-}) {
-  const badgeClass =
-    priority === "alta"
-      ? "bg-rose-50 text-rose-600"
-      : priority === "media"
-      ? "bg-[#fffaf0] text-[#8a6d1f]"
-      : "bg-green-100 text-[#0f5c3a]";
-
-  return (
-    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <h3 className="text-sm font-bold text-neutral-900">{title}</h3>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
-          {priority}
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-neutral-600">{description}</p>
-    </div>
-  );
-}
 
 function ProgressRow({
   label,

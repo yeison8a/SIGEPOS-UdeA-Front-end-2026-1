@@ -1,3 +1,4 @@
+"use client";
 import {
   ClipboardList,
   FileClock,
@@ -10,43 +11,68 @@ import DashboardShell from "../../../../components/dashboard/DashboardShell";
 import DashboardCard from "../../../../components/dashboard/DashboardCard";
 import KpiCard from "../../../../components/dashboard/KpiCard";
 import StatusBadge from "../../../../components/dashboard/StatusBadge";
+import { useEffect, useState } from "react";
 
-const solicitudes = [
-  {
-    codigo: "SOL-2026-001",
-    programa: "Ingeniería de Sistemas",
-    cohorte: "2026-1",
-    responsable: "María Gómez",
-    estado: "En revisión",
-    fecha: "2026-04-18",
-  },
-  {
-    codigo: "SOL-2026-002",
-    programa: "Ciencia de Datos",
-    cohorte: "2026-1",
-    responsable: "Carlos Ruiz",
-    estado: "Pendiente anexos",
-    fecha: "2026-04-17",
-  },
-  {
-    codigo: "SOL-2026-003",
-    programa: "Arquitectura de Software",
-    cohorte: "2026-2",
-    responsable: "Laura Pérez",
-    estado: "Borrador",
-    fecha: "2026-04-16",
-  },
-  {
-    codigo: "SOL-2026-004",
-    programa: "Maestría en Educación",
-    cohorte: "2026-1",
-    responsable: "Andrés López",
-    estado: "Enviada",
-    fecha: "2026-04-15",
-  },
-];
+type Solicitud = {
+  id: string;
+  estado: string;
+  enviada: boolean;
+  fechaActaAprobacion: string;
+  programa?: {
+    nombre: string;
+  };
+};
 
 export default function AdminSolicitudesPage() {
+
+const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+const totalSolicitudes = solicitudes.length;
+
+const enRevision = solicitudes.filter(
+  (s) => s.estado === "PENDIENTE_ANEXOS"
+);
+
+const enviadas = solicitudes.filter(
+  (s) => s.estado === "ENVIADA"
+);
+
+const borradores = solicitudes.filter(
+  (s) => s.estado === "BORRADOR"
+);
+
+
+
+
+useEffect(() => {
+  const fetchSolicitudes = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:8080/api/cohort-applications");
+
+      if (!res.ok) throw new Error("Error al obtener solicitudes");
+
+      const data = await res.json();
+      setSolicitudes(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error desconocido");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSolicitudes();
+}, []);
+
+
+
+
   return (
     <DashboardShell
       title="Gestión de solicitudes"
@@ -58,28 +84,28 @@ export default function AdminSolicitudesPage() {
         <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             title="Total solicitudes"
-            value="18"
+            value={loading ? "..." : String(totalSolicitudes)}
             change="Periodo actual"
             icon={<ClipboardList size={18} />}
             tone="green"
           />
           <KpiCard
             title="En revisión"
-            value="7"
+            value={loading ? "..." : String(enRevision.length)}
             change="Pendientes de validar"
             icon={<SearchCheck size={18} />}
             tone="cream"
           />
           <KpiCard
             title="Enviadas"
-            value="12"
+            value={loading ? "..." : String(enviadas.length)}
             change="Con radicación completa"
             icon={<Send size={18} />}
             tone="white"
           />
           <KpiCard
             title="Borradores"
-            value="6"
+            value={loading ? "..." : String(borradores.length)}
             change="Sin envío final"
             icon={<FileClock size={18} />}
             tone="green"
@@ -103,20 +129,6 @@ export default function AdminSolicitudesPage() {
                 />
               </div>
 
-              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 outline-none">
-                <option>Todas las facultades</option>
-                <option>Ingeniería</option>
-                <option>Ciencias</option>
-                <option>Educación</option>
-              </select>
-
-              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 outline-none">
-                <option>Todos los estados</option>
-                <option>Borrador</option>
-                <option>En revisión</option>
-                <option>Pendiente anexos</option>
-                <option>Enviada</option>
-              </select>
             </div>
 
             <div className="overflow-hidden rounded-[18px] border border-neutral-200 bg-white">
@@ -134,32 +146,7 @@ export default function AdminSolicitudesPage() {
                     </tr>
                   </thead>
 
-                  <tbody>
-                    {solicitudes.map((row) => (
-                      <tr key={row.codigo} className="border-t border-neutral-200">
-                        <td className="px-4 py-3 font-semibold text-[#0f5c3a]">
-                          {row.codigo}
-                        </td>
-                        <td className="px-4 py-3 text-neutral-700">{row.programa}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.cohorte}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.responsable}</td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={row.estado} />
-                        </td>
-                        <td className="px-4 py-3 text-neutral-700">{row.fecha}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <button className="rounded-lg border border-[#0f5c3a] px-3 py-1.5 text-xs font-semibold text-[#0f5c3a] transition hover:bg-green-50">
-                              Ver
-                            </button>
-                            <button className="rounded-lg bg-[#0f5c3a] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0b4a2f]">
-                              Gestionar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  
                 </table>
               </div>
             </div>
@@ -178,11 +165,6 @@ export default function AdminSolicitudesPage() {
               <ProgressRow label="Radicadas" value={39} />
             </div>
 
-            <div className="mt-6 grid gap-4">
-              <MiniInfo title="Pendientes críticas" value="3" />
-              <MiniInfo title="Programas con más actividad" value="Ingeniería" />
-              <MiniInfo title="Última actualización masiva" value="Hoy 08:40" />
-            </div>
           </DashboardCard>
         </div>
       </div>

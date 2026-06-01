@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   ClipboardList,
@@ -66,13 +66,34 @@ export default function CohortePage() {
     estimuloDescripcion: "",
     numeroPlazas: "",
   });
-
+const PROGRESS_KEY = "solicitud-cohorte-step";
   function updateField<K extends keyof CohorteForm>(
     key: K,
     value: CohorteForm[K]
   ) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+
+const informacion = localStorage.getItem(
+  "solicitud-cohorte-informacion"
+);
+
+useEffect(() => {
+  localStorage.setItem(
+    "solicitud-cohorte-step",
+    "3"
+  );
+}, []);
+
+const tipoSolicitud = informacion
+  ? JSON.parse(informacion).tipoSolicitud
+  : "";
+
+const nextPage =
+  tipoSolicitud === "renovacion"
+    ? "/solicitud-cohorte/anexos-2"
+    : "/solicitud-cohorte/anexos-1";
 
   return (
     <SolicitudShell
@@ -147,7 +168,7 @@ export default function CohortePage() {
 
         <SolicitudActions
           prevHref="/solicitud-cohorte/descripcion"
-          nextHref="/solicitud-cohorte/anexos-1"
+          nextHref={nextPage}
         />
       </div>
     </SolicitudShell>

@@ -5,12 +5,14 @@ type SolicitudActionsProps = {
   prevHref?: string;
   nextHref?: string;
   nextLabel?: string;
+  disabled?: boolean;
 };
 
 export default function SolicitudActions({
   prevHref,
   nextHref,
   nextLabel = "Siguiente",
+  disabled = false,
 }: SolicitudActionsProps) {
   const justifyClass = prevHref
     ? "sm:items-center sm:justify-between"
@@ -39,15 +41,25 @@ export default function SolicitudActions({
           Guardar
         </button>
 
-        {nextHref && (
-          <Link
-            href={nextHref}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
-          >
-            {nextLabel}
-            <ArrowRight size={16} />
-          </Link>
-        )}
+{nextHref &&
+  (disabled ? (
+    <button
+      type="button"
+      disabled
+      className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-400 px-5 py-3 text-sm font-semibold text-white cursor-not-allowed"
+    >
+      {nextLabel}
+      <ArrowRight size={16} />
+    </button>
+  ) : (
+    <Link
+      href={nextHref}
+      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+    >
+      {nextLabel}
+      <ArrowRight size={16} />
+    </Link>
+  ))}
       </div>
     </div>
   );
