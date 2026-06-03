@@ -56,6 +56,10 @@ type Revision = {
   status: string;
   observations: string;
   reviewDate: string;
+
+  cohortApplication: {
+    id: string
+  };
 };
 
 export default function AdminRevisionesPage() {
@@ -128,9 +132,17 @@ const crearRevision = async () => {
       throw new Error("Error creando revisión");
     }
 
+    await cargarRevisiones();
+    
+    setRevisionForm({
+      priority: "",
+      status: "",
+      observations: "",
+    });
+    setOpenResolverModal(false);
+
     alert("Revisión creada correctamente");
 
-    setOpenResolverModal(false);
   } catch (error) {
     console.error(error);
     alert("No fue posible crear la revisión");
@@ -139,15 +151,19 @@ const crearRevision = async () => {
 
 
 const pendientesRevision = solicitudes.filter(
-  (s) => s.estado === "PENDIENTE"
+  (solicitud) =>
+    !revisiones.some(
+      (revision) =>
+        revision.cohortApplication?.id === solicitud.id
+    )
 ).length;
 
-const devueltas = solicitudes.filter(
-  (s) => s.estado === "DEVUELTA"
+const devueltas = revisiones.filter(
+  (r) => r.status === "DEVUELTA"
 ).length;
 
-const cerradas = solicitudes.filter(
-  (s) => s.estado === "REVISADA"
+const cerradas = revisiones.filter(
+  (r) => r.status === "REVISADA"
 ).length;
 
 
@@ -168,6 +184,14 @@ const cargarRevisiones = async () => {
   } catch (error) {
     console.error(error);
   }
+};
+
+const obtenerEstadoRevision = (solicitudId: string) => {
+  const revision = revisiones.find(
+    (r) => r.cohortApplication?.id === solicitudId
+  );
+
+  return revision?.status || "SIN REVISIÓN";
 };
 
   return (
@@ -233,7 +257,11 @@ const cargarRevisiones = async () => {
                         </td>
                         <td className="px-4 py-3 text-neutral-700">{row.programa.nombre}</td>
                         <td className="px-4 py-3 text-neutral-700">{row.usuario.username}</td>
-                        <td className="px-4 py-3 text-neutral-700">{row.estado}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge
+                            status={obtenerEstadoRevision(row.id)}
+                          />
+                        </td>
 
                         <td className="px-4 py-3">
                           <div className="flex gap-2">

@@ -49,12 +49,56 @@ type Solicitud = {
   };
 };
 
+type Revision = {
+  id: string;
+  status: string;
+  reviewDate: string;
+
+
+  cohortApplication: {
+    id: string;
+    programa: {
+      nombre: string;
+    };
+  };
+}
+
 
 export default function AdminDashboardPage() {
 
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
+const [revisiones, setRevisiones] = useState<Revision[]>([]);
+
+const pendientes = solicitudes.filter(
+  (solicitud) =>
+    !revisiones.some(
+      (revision) =>
+        revision.cohortApplication?.id === solicitud.id
+    )
+).length;
+
+const devueltas = revisiones.filter(
+  (r) => r.status === "DEVUELTA"
+).length;
+
+const cerradas = revisiones.filter(
+  (r) => r.status === "REVISADA"
+).length;
+
+const revisadas = devueltas + cerradas;
+
+const total = solicitudes.length;
+
+const porcentajePendientes =
+  total > 0 ? Math.round((pendientes / total) * 100) : 0;
+
+const porcentajeRevisadas =
+  total > 0 ? Math.round((revisadas / total) * 100) : 0;
+
+const porcentajeCerradas =
+  total > 0 ? Math.round((cerradas / total) * 100) : 0;
 
 useEffect(() => {
   const fetchSolicitudes = async () => {
@@ -80,9 +124,57 @@ useEffect(() => {
   fetchSolicitudes();
 }, []);
 
-  const solicitudesActivas = solicitudes.filter(
-    (s) => s.enviada === true
-  );
+const revisionesRecientes = [...revisiones]
+  .sort(
+    (a, b) =>
+      new Date(b.reviewDate).getTime() -
+      new Date(a.reviewDate).getTime()
+  )
+  .slice(0, 10);
+
+const fetchRevisiones = async () => {
+  const res = await fetch("http://localhost:8080/api/revisions");
+
+  if (!res.ok) {
+    throw new Error("Error al obtener revisiones");
+  }
+
+  const data = await res.json();
+  setRevisiones(data);
+};
+
+useEffect(() => {
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+
+      const [solicitudesRes, revisionesRes] = await Promise.all([
+        fetch("http://localhost:8080/api/cohort-applications"),
+        fetch("http://localhost:8080/api/revisions"),
+      ]);
+
+      const solicitudesData = await solicitudesRes.json();
+      const revisionesData = await revisionesRes.json();
+
+      setSolicitudes(solicitudesData);
+      setRevisiones(revisionesData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  cargarDatos();
+}, []);
+
+const solicitudesActivas = solicitudes.filter(
+  (solicitud) =>
+    !revisiones.some(
+      (revision) =>
+        revision.cohortApplication?.id === solicitud.id
+    )
+);
 
   const anexosPendientes = solicitudes.filter(
   (s) => !s.rutaDocumento || s.rutaDocumento.trim() === ""
@@ -103,6 +195,8 @@ if (loading) {
 if (error) {
   return <p className="p-4 text-red-500">{error}</p>;
 }
+
+
 
   return (
     <DashboardShell
@@ -152,11 +246,37 @@ if (error) {
                     <tr className="text-left text-neutral-600">
                       <th className="px-4 py-3 font-semibold">Código</th>
                       <th className="px-4 py-3 font-semibold">Programa</th>
-                      <th className="px-4 py-3 font-semibold">Cohorte</th>
                       <th className="px-4 py-3 font-semibold">Estado</th>
                       <th className="px-4 py-3 font-semibold">Fecha</th>
                     </tr>
                   </thead>
+
+                  <tbody>
+    {revisionesRecientes.map((revision) => (
+      <tr
+        key={revision.id}
+        className="border-t border-neutral-200"
+      >
+        <td className="px-4 py-3 font-medium">
+          {revision.cohortApplication?.id}
+        </td>
+
+        <td className="px-4 py-3">
+          {revision.cohortApplication?.programa?.nombre}
+        </td>
+
+        <td className="px-4 py-3">
+          <StatusBadge status={revision.status} />
+        </td>
+
+        <td className="px-4 py-3">
+          {new Date(
+            revision.reviewDate
+          ).toLocaleDateString("es-CO")}
+        </td>
+      </tr>
+    ))}
+  </tbody>
 
                 </table>
               </div>
@@ -171,27 +291,24 @@ if (error) {
               tone="green"
             >
               <div className="space-y-5">
-                <ProgressRow label="Solicitudes revisadas" value={84} />
-                <ProgressRow label="Anexos verificados" value={68} />
-                <ProgressRow label="Procesos enviados" value={52} />
-                <ProgressRow label="Aprobaciones finales" value={41} />
-              </div>
+  <ProgressRow
+    label={`Solicitudes revisadas (${revisadas})`}
+    value={porcentajeRevisadas}
+  />
+
+  <ProgressRow
+    label={`Aprobaciones finales (${cerradas})`}
+    value={porcentajeCerradas}
+  />
+
+  <ProgressRow
+    label={`Pendientes (${pendientes})`}
+    value={porcentajePendientes}
+  />
+</div>
             </DashboardCard>
 
-            <div className="overflow-hidden rounded-[24px] bg-[#0f5c3a] text-white shadow-lg">
-              <div className="border-b border-white/10 px-6 py-5">
-                <p className="text-sm font-semibold text-green-100">
-                  Panel ejecutivo
-                </p>
-                <h3 className="mt-1 text-xl font-bold">Resumen institucional</h3>
-              </div>
-
-              <div className="grid gap-4 p-6">
-                <MetricBlock label="Solicitudes en borrador" value="6" />
-                <MetricBlock label="Solicitudes enviadas" value="12" />
-                <MetricBlock label="Procesos aprobados" value="9" />
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
