@@ -19,8 +19,6 @@ type UploadCardProps = {
 
 function UploadCard({ title, required = false, onFileSelect }: UploadCardProps) {
   const [fileName, setFileName] = useState("");
-  
-
 
   return (
     <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px]">
@@ -120,7 +118,14 @@ const guardarDocumentos = async () => {
       throw new Error("Error al subir documentos");
     }
 
-    const data = await response.json();
+    const data = await response.json() as { id: string }[];
+
+    const documentosIds = data.map(doc => doc.id);
+    
+    localStorage.setItem(
+  "solicitud-cohorte-documentos",
+  JSON.stringify(documentosIds)
+);
 
     console.log(data);
 

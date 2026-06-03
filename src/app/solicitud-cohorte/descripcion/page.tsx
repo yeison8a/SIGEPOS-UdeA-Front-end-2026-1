@@ -26,7 +26,7 @@ type FormData = {
   puntajeMinimo: string;
   cupoMinimo: string;
   cupoMaximo: string;
-  cuposRiesgo: string;
+  cuposEstudiantes: string;
   plazasDisponibles: string;
 };
 
@@ -40,7 +40,7 @@ export default function DescripcionPage() {
     puntajeMinimo: "",
     cupoMinimo: "",
     cupoMaximo: "",
-    cuposRiesgo: "",
+    cuposEstudiantes: "",
     plazasDisponibles: "",
   });
 
@@ -214,16 +214,16 @@ if (form.plazasDisponibles === "Sí") {
   </FieldCard>
 
   <FieldCard
-    label="Cupos para población en riesgo"
+    label="Cupos para estudientes"
     required
     icon={<Users size={16} />}
     tone="greenTint"
   >
     <input
       type="number"
-      value={form.cuposRiesgo}
+      value={form.cuposEstudiantes}
       onChange={(e) =>
-        updateField("cuposRiesgo", e.target.value)
+        updateField("cuposEstudiantes", e.target.value)
       }
       className={solicitudInputClass}
     />

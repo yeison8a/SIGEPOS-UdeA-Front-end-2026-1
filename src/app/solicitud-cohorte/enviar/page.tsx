@@ -52,6 +52,10 @@ function ReviewCard({
   );
 }
 
+type Documento = {
+  id: string;
+};
+
 export default function EnviarPage() {
   const PROGRESS_KEY = "solicitud-cohorte-step";
   
@@ -61,6 +65,110 @@ export default function EnviarPage() {
     "5"
   );
 }, []);
+
+const enviarSolicitud = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("No se encontró el usuario");
+      return;
+    }
+
+    const informacion = JSON.parse(
+      localStorage.getItem("solicitud-cohorte-informacion") || "{}"
+    );
+
+    const descripcion = JSON.parse(
+      localStorage.getItem("solicitud-cohorte-descripcion") || "{}"
+    );
+
+    const documentosIds: string[] = JSON.parse(
+  localStorage.getItem("solicitud-cohorte-documentos") || "[]"
+);
+
+const documentoId = documentosIds[0];
+
+    console.log(informacion);
+    console.log(descripcion);
+    console.log(documentosIds);
+
+    const solicitud = {
+
+  numeroActa: informacion.numeroActa,
+  fechaActaAprobacion: informacion.fechaAprobacion,
+
+  programa: {
+    id: informacion.programa,
+  },
+
+  perfilAspirante: descripcion.perfilAspirante,
+  correoDocumentacion: descripcion.correoDocumentos,
+  diasHabilesRecepcion: Number(descripcion.diasHabiles),
+  puntajeMinimoCorte: Number(descripcion.puntajeMinimo),
+  cupoMinCohorte: Number(descripcion.cupoMinimo),
+  cupoMaxCohorte: Number(descripcion.cupoMaximo),
+  cupoEstudiantes: Number(descripcion.cuposEstudiantes),
+
+  plazasDisponibles: descripcion.plazasDisponibles === "Si",
+
+  usuario: {
+    id: userId,
+  },
+
+  documento: documentoId ? { id: documentoId } : null,
+
+  estado: "PENDIENTE",
+  enviada: true,
+
+  rutaDocumento: null,
+
+};
+
+    console.log(
+  JSON.stringify(solicitud, null, 2)
+);
+    const response = await fetch(
+      `http://localhost:8080/api/cohort-applications?userId=${userId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(solicitud),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+  console.log("STATUS:", response.status);
+  console.log("ERROR:", errorText);
+
+      throw new Error("Error enviando solicitud");
+    }
+
+    const data = await response.json();
+
+    console.log(data);
+
+    localStorage.removeItem("solicitud-cohorte-general");
+
+    localStorage.removeItem("solicitud-cohorte-descripcion");
+
+    localStorage.removeItem("solicitud-cohorte-cohorte");
+
+    localStorage.removeItem("solicitud-cohorte-step");
+
+    alert("Solicitud enviada correctamente");
+
+  } catch (error) {
+    console.error(error);
+    alert("No fue posible enviar la solicitud");
+  }
+};
+
+
   return (
     <SolicitudShell
       currentStep={6}
@@ -135,6 +243,7 @@ export default function EnviarPage() {
 
           <button
             type="button"
+            onClick={enviarSolicitud}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
           >
             Enviar solicitud
