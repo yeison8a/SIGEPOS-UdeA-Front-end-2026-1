@@ -14,9 +14,10 @@ import SolicitudActions from "../../../../components/solicitud/SolicitudActions"
 type UploadCardProps = {
   title: string;
   required?: boolean;
+  onFileSelect?: (file: File) => void;
 };
 
-function UploadCard({ title, required = false }: UploadCardProps) {
+function UploadCard({ title, required = false, onFileSelect }: UploadCardProps) {
   const [fileName, setFileName] = useState("");
 
   return (
@@ -34,7 +35,11 @@ function UploadCard({ title, required = false }: UploadCardProps) {
           className="hidden"
           onChange={(e) => {
             const selected = e.target.files?.[0];
-            setFileName(selected?.name || "");
+            
+            if(!selected) return;
+
+            setFileName(selected.name);
+            onFileSelect?.(selected);
           }}
         />
       </label>
@@ -51,6 +56,7 @@ function UploadCard({ title, required = false }: UploadCardProps) {
 }
 
 export default function Anexos2Page() {
+const [archivos, setArchivos] = useState<File[]>([]);
 const PROGRESS_KEY = "solicitud-cohorte-step";
   const [prevPage, setPrevPage] = useState(
   "/solicitud-cohorte/cohorte"
@@ -76,6 +82,47 @@ useEffect(() => {
     "3"
   );
 }, []);
+
+const guardarDocumentos = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("No se encontró el usuario");
+      return;
+    }
+
+    if (archivos.length === 0) {
+      alert("Debe seleccionar al menos un archivo");
+      return;
+    }
+
+    const formData = new FormData();
+
+    archivos.forEach((archivo) => {
+      formData.append("archivos", archivo);
+    });
+
+    const response = await fetch(
+      `http://localhost:8080/api/user/${userId}/documents`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al subir documentos");
+    }
+
+    alert("Documentos cargados correctamente");
+
+    setArchivos([]);
+  } catch (error) {
+    console.error(error);
+    alert("No fue posible subir los documentos");
+  }
+};
 
   return (
     <SolicitudShell
@@ -110,16 +157,25 @@ useEffect(() => {
               <UploadCard
                 title="Aval del Consejo de Unidad Académica"
                 required
+                onFileSelect={(file) =>
+                  setArchivos((prev) => [...prev, file])
+                }
               />
 
               <UploadCard
                 title="Aval del estudio de costos de la Vicerrectoría de Investigación"
                 required
+                onFileSelect={(file) =>
+                  setArchivos((prev) => [...prev, file])
+                }
               />
 
               <UploadCard
                 title="Autoevaluación del programa"
                 required
+                onFileSelect={(file) =>
+                  setArchivos((prev) => [...prev, file])
+                }
               />
             </div>
           </div>
@@ -128,6 +184,7 @@ useEffect(() => {
         <SolicitudActions
           prevHref={prevPage}
           nextHref="/solicitud-cohorte/enviar"
+          onSave={guardarDocumentos}
         />
       </div>
     </SolicitudShell>

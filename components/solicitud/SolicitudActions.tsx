@@ -6,6 +6,7 @@ type SolicitudActionsProps = {
   nextHref?: string;
   nextLabel?: string;
   disabled?: boolean;
+  onSave?: () => void;
 };
 
 export default function SolicitudActions({
@@ -13,6 +14,7 @@ export default function SolicitudActions({
   nextHref,
   nextLabel = "Siguiente",
   disabled = false,
+  onSave
 }: SolicitudActionsProps) {
   const justifyClass = prevHref
     ? "sm:items-center sm:justify-between"
@@ -35,6 +37,9 @@ export default function SolicitudActions({
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
+          onClick={() => {
+    onSave?.();
+  }}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#0f5c3a] bg-white px-5 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
         >
           <Save size={16} />

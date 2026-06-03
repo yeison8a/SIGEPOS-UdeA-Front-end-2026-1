@@ -14,10 +14,13 @@ import SolicitudActions from "../../../../components/solicitud/SolicitudActions"
 type UploadCardProps = {
   title: string;
   required?: boolean;
+  onFileSelect?: (file: File) => void;
 };
 
-function UploadCard({ title, required = false }: UploadCardProps) {
+function UploadCard({ title, required = false, onFileSelect }: UploadCardProps) {
   const [fileName, setFileName] = useState("");
+  
+
 
   return (
     <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px]">
@@ -37,7 +40,11 @@ function UploadCard({ title, required = false }: UploadCardProps) {
           className="hidden"
           onChange={(e) => {
             const selected = e.target.files?.[0];
-            setFileName(selected?.name || "");
+            if(!selected) return;
+
+            setFileName(selected.name);
+            onFileSelect?.(selected);
+
           }}
         />
       </label>
@@ -54,6 +61,7 @@ function UploadCard({ title, required = false }: UploadCardProps) {
 }
 
 export default function Anexos1Page() {
+const [archivos, setArchivos] = useState<File[]>([]);
 const PROGRESS_KEY = "solicitud-cohorte-step";
   const [prevPage, setPrevPage] = useState(
     "/solicitud-cohorte/cohorte"
@@ -79,6 +87,51 @@ const PROGRESS_KEY = "solicitud-cohorte-step";
     "3"
   );
 }, []);
+
+const guardarDocumentos = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("No se encontró el usuario");
+      return;
+    }
+
+    if (archivos.length === 0) {
+      alert("Debe seleccionar al menos un archivo");
+      return;
+    }
+
+    const formData = new FormData();
+
+    archivos.forEach((archivo) => {
+      formData.append("archivos", archivo);
+    });
+
+    const response = await fetch(
+      `http://localhost:8080/api/user/${userId}/documents`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Error al subir documentos");
+    }
+
+    const data = await response.json();
+
+    console.log(data);
+
+    alert("Documentos cargados correctamente");
+
+    setArchivos([]);
+  } catch (error) {
+    console.error(error);
+    alert("No fue posible subir los documentos");
+  }
+};
 
   return (
     <SolicitudShell
@@ -111,11 +164,17 @@ const PROGRESS_KEY = "solicitud-cohorte-step";
               <UploadCard
                 title="Aval del Consejo de Unidad Académica"
                 required
+                onFileSelect={(file) =>
+                  setArchivos((prev) => [...prev, file])
+                }
               />
 
               <UploadCard
                 title="Aval del estudio de costos de la Vicerrectoría de Investigación"
                 required
+                onFileSelect={(file) =>
+                  setArchivos((prev) => [...prev, file])
+                }
               />
             </div>
           </div>
@@ -124,6 +183,7 @@ const PROGRESS_KEY = "solicitud-cohorte-step";
         <SolicitudActions
           prevHref={prevPage}
           nextHref="/solicitud-cohorte/anexos-2"
+          onSave={guardarDocumentos}
         />
       </div>
     </SolicitudShell>
