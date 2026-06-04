@@ -187,7 +187,7 @@ const guardarDocumentos = async () => {
 
         <SolicitudActions
           prevHref={prevPage}
-          nextHref="/solicitud-cohorte/anexos-2"
+          nextHref="/solicitud-cohorte/enviar"
           onSave={guardarDocumentos}
         />
       </div>
