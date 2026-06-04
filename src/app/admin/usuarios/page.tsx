@@ -27,7 +27,7 @@ export default function AdminUsuariosPage() {
   const [nuevoUsuario, setNuevoUsuario] = useState({
     correo: "",
     contrasena: "",
-    role: "",
+    role: "USER",
   });
 
   const [usuarioSeleccionado, setUsuarioSeleccionado] =
@@ -38,7 +38,7 @@ export default function AdminUsuariosPage() {
   const [editForm, setEditForm] = useState({
     correo: "",
     contrasena: "",
-    role: "",
+    rol: "",
   });
 
   const cargarUsuarios = async () => {
@@ -52,7 +52,7 @@ export default function AdminUsuariosPage() {
       }
 
       const data = await response.json();
-
+      console.log(data);
       setUsuarios(data);
     } catch (error) {
       console.error(error);
@@ -61,77 +61,104 @@ export default function AdminUsuariosPage() {
     }
   };
 
-  const crearUsuario = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:8080/api/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(nuevoUsuario),
-        }
-      );
+const crearUsuario = async () => {
+  console.log("ANTES DE ENVIAR:", nuevoUsuario);
 
-      if (!response.ok) {
-        throw new Error("Error al crear usuario");
+  try {
+    const response = await fetch(
+      "http://localhost:8080/api/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevoUsuario),
       }
+    );
 
-      setOpenModal(false);
+    console.log("STATUS:", response.status);
 
-      setNuevoUsuario({
-        correo: "",
-        contrasena: "",
-        role: "",
-      });
+    const texto = await response.text();
+    console.log("RESPUESTA:", texto);
 
-      await cargarUsuarios();
-    } catch (error) {
-      console.error(error);
-      alert("No fue posible crear el usuario");
+    if (!response.ok) {
+      throw new Error("Error al crear usuario");
     }
-  };
 
-  const actualizarUsuario = async () => {
-    if (!usuarioSeleccionado) return;
+    await cargarUsuarios();
 
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/users/${usuarioSeleccionado.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: usuarioSeleccionado.id,
-            correo: editForm.correo,
-            contrasena: editForm.contrasena,
-            role: editForm.role,
-            enabled: true,
-          }),
-        }
-      );
+    setNuevoUsuario({
+      correo: "",
+      contrasena: "",
+      role: "USER",
+    });
 
-      if (!response.ok) {
-        throw new Error("Error al actualizar usuario");
+    setOpenModal(false);
+
+    alert("Usuario creado correctamente");
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo crear el usuario");
+  }
+};
+
+const actualizarUsuario = async () => {
+  try {
+    const usuarioActualizado = {
+      id: usuarioSeleccionado?.id,
+      correo: editForm.correo,
+      contrasena: editForm.contrasena,
+      rol: editForm.rol,
+      enabled: true,
+    };
+
+    console.log("🟡 Usuario a actualizar:", usuarioActualizado);
+
+    const response = await fetch(
+      `http://localhost:8080/api/user/${usuarioSeleccionado?.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(usuarioActualizado),
       }
+    );
 
-      setOpenEditModal(false);
+    console.log("📌 Status:", response.status);
 
-      await cargarUsuarios();
-    } catch (error) {
-      console.error(error);
+    const texto = await response.text();
+    console.log("📌 Respuesta:", texto);
+
+    if (!response.ok) {
+      throw new Error("Error al actualizar usuario");
     }
-  };
 
-  const eliminarUsuario = async () => {
-    if (!usuarioSeleccionado) return;
+    alert("Usuario actualizado correctamente");
 
+    await cargarUsuarios();
+
+    setOpenEditModal(false);
+
+    setEditForm({
+      correo: "",
+      contrasena: "",
+      rol: "",
+    });
+
+    setUsuarioSeleccionado(null);
+  } catch (error) {
+    console.error("❌ Error:", error);
+    alert("No se pudo actualizar el usuario");
+  }
+};
+
+  const eliminarUsuario = async (id: string) => {
+    console.log("ID a eliminar:", id);
+    console.log("Usuario seleccionado:", usuarioSeleccionado);
     try {
       const response = await fetch(
-        `http://localhost:8080/api/user/${usuarioSeleccionado.id}`,
+        `http://localhost:8080/api/user/${id}`,
         {
           method: "DELETE",
         }
@@ -265,7 +292,7 @@ export default function AdminUsuariosPage() {
                                 setEditForm({
                                   correo: user.correo,
                                   contrasena: "",
-                                  role: user.rol,
+                                  rol: user.rol,
                                 });
                                 setOpenEditModal(true);
                               }}
@@ -325,12 +352,13 @@ export default function AdminUsuariosPage() {
 
         <select
           value={nuevoUsuario.role}
-          onChange={(e) =>
+          onChange={(e) => {
+            console.log("ROL SELECCIONADO:", e.target.value);
             setNuevoUsuario({
               ...nuevoUsuario,
               role: e.target.value,
             })
-          }
+          }}
           className="w-full rounded-lg border border-neutral-300 p-3"
         >
           <option value="USER">Usuario</option>
@@ -393,11 +421,11 @@ export default function AdminUsuariosPage() {
         />
 
         <select
-          value={editForm.role}
+          value={editForm.rol}
           onChange={(e) =>
             setEditForm({
               ...editForm,
-              role: e.target.value,
+              rol: e.target.value,
             })
           }
           className="w-full rounded-lg border border-neutral-300 p-3"
@@ -409,7 +437,10 @@ export default function AdminUsuariosPage() {
 
       <div className="mt-6 flex justify-between">
         <button
-          onClick={eliminarUsuario}
+          onClick={() => {
+            if (!usuarioSeleccionado) return;
+            eliminarUsuario(usuarioSeleccionado.id);
+          }}
           className="rounded-lg bg-red-600 px-4 py-2 text-white"
         >
           Eliminar

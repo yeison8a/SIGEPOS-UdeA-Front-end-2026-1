@@ -115,11 +115,13 @@ const guardarDocumentos = async () => {
       throw new Error("Error al subir documentos");
     }
 
-    const data = await response.json();
+    const data = await response.json() as { id: string }[];
+
+    const documentosIds = data.map(doc => doc.id);
 
     localStorage.setItem(
   "solicitud-cohorte-documentos",
-  JSON.stringify(data)
+  JSON.stringify(documentosIds)
 );
 
     alert("Documentos cargados correctamente");
