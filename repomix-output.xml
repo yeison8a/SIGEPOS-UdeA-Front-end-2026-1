@@ -1,0 +1,3281 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: **/*.svg, README.md
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+components/auth/LoginForm.tsx
+components/dashboard/DashboardCard.tsx
+components/dashboard/DashboardShell.tsx
+components/dashboard/KpiCard.tsx
+components/dashboard/StatusBadge.tsx
+components/solicitud/FieldCard.tsx
+components/solicitud/SectionCard.tsx
+components/solicitud/SolicitudActions.tsx
+components/solicitud/SolicitudShell.tsx
+components/solicitud/StepProgress.tsx
+eslint.config.mjs
+global.d.ts
+lib/auth/auth.ts
+lib/solicitud-cohorte/steps.ts
+lib/solicitud-cohorte/ui.ts
+middleware.ts
+next.config.ts
+package.json
+postcss.config.mjs
+productos_amazon.xlsx
+productos_limpios.xlsx
+public/images/udea-campus.jpg
+public/udea.jpg
+src/app/admin/dashboard/page.tsx
+src/app/api/auth/login/route.ts
+src/app/api/auth/logout/route.ts
+src/app/favicon.ico
+src/app/globals.css
+src/app/layout.tsx
+src/app/login/page.tsx
+src/app/page.tsx
+src/app/solicitud-cohorte/anexos-1/page.tsx
+src/app/solicitud-cohorte/anexos-2/page.tsx
+src/app/solicitud-cohorte/cohorte/page.tsx
+src/app/solicitud-cohorte/descripcion/page.tsx
+src/app/solicitud-cohorte/enviar/page.tsx
+src/app/solicitud-cohorte/informacion/page.tsx
+src/app/solicitud-cohorte/page.tsx
+src/app/test/page.tsx
+src/app/usuario/dashboard/page.tsx
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+</file>
+
+<file path="components/auth/LoginForm.tsx">
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Phone,
+  Search,
+  UserPlus,
+  LogIn,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+export default function LoginForm() {
+  const router = useRouter();
+
+  const [tab, setTab] = useState<"login" | "register">("login");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("admin@udea.edu.co");
+  const [password, setPassword] = useState("123456");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setInfoMessage("");
+
+    if (tab === "register") {
+      setInfoMessage(
+        "El diseño de registro quedó listo, pero aún no hemos conectado el endpoint de registro. Por ahora puedes ingresar con un usuario demo."
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setError(data.message || "Credenciales inválidas");
+        return;
+      }
+
+      router.push(data.redirectTo);
+      router.refresh();
+    } catch {
+      setError("Ocurrió un error al iniciar sesión");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-[#e9dfdf] px-4 py-8 md:px-8">
+      <section className="mx-auto w-full max-w-6xl overflow-hidden rounded-[22px] bg-white shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+        {/* Topbar */}
+        <div className="flex flex-col gap-3 bg-[#0f5c3a] px-6 py-3 text-white md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm">
+            <span className="flex items-center gap-2">
+              <Phone size={14} />
+              +57 (604) 219 0000
+            </span>
+            <span className="flex items-center gap-2">
+              <Mail size={14} />
+              posgrados@universidad.edu.co
+            </span>
+          </div>
+
+          <div className="flex items-center gap-5 text-xs md:text-sm">
+            <button
+              type="button"
+              onClick={() => {
+                setTab("register");
+                setError("");
+                setInfoMessage("");
+              }}
+              className="flex items-center gap-1 hover:text-green-200"
+            >
+              <UserPlus size={14} />
+              Registrarse
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTab("login");
+                setError("");
+                setInfoMessage("");
+              }}
+              className="flex items-center gap-1 hover:text-green-200"
+            >
+              <LogIn size={14} />
+              Iniciar sesión
+            </button>
+          </div>
+        </div>
+
+        {/* Navbar */}
+        <div className="flex flex-col gap-4 border-b border-neutral-200 px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-[#0f5c3a]">
+              U
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-neutral-900">Universidad</p>
+              <p className="text-xs text-neutral-500">Portal de Posgrados</p>
+            </div>
+          </div>
+
+          <nav className="hidden items-center gap-6 text-sm text-neutral-600 lg:flex">
+            <Link href="#" className="hover:text-[#0f5c3a]">
+              Inicio
+            </Link>
+            <Link href="#" className="hover:text-[#0f5c3a]">
+              Programas
+            </Link>
+            <Link href="#" className="hover:text-[#0f5c3a]">
+              Admisiones
+            </Link>
+            <Link href="#" className="hover:text-[#0f5c3a]">
+              Campus
+            </Link>
+            <Link href="#" className="hover:text-[#0f5c3a]">
+              Contacto
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="rounded-lg bg-[#0f5c3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+            >
+              Convocatorias
+            </button>
+
+            <button
+              type="button"
+              className="rounded-full border border-neutral-300 p-2 text-neutral-600 transition hover:bg-neutral-100"
+            >
+              <Search size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <div className="grid min-h-[620px] lg:grid-cols-[1.05fr_0.95fr]">
+          {/* Left */}
+          <div className="flex items-center px-6 py-10 md:px-10 lg:px-12">
+            <div className="max-w-xl">
+              <p className="mb-4 text-sm font-semibold text-[#0f5c3a]">
+                Bienvenido al Portal de Inscripciones de Posgrados
+              </p>
+
+              <h1 className="text-4xl font-extrabold leading-tight text-neutral-950 md:text-5xl">
+                Continúa tu formación con una experiencia de acceso moderna y clara
+              </h1>
+
+              <p className="mt-5 max-w-lg text-base leading-7 text-neutral-600">
+                Consulta convocatorias, crea tu cuenta, inicia sesión y gestiona tu
+                proceso de inscripción desde una interfaz más limpia, institucional
+                y fácil de usar.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="rounded-lg bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+                >
+                  Ver convocatorias
+                </button>
+
+                <button
+                  type="button"
+                  className="rounded-lg border border-[#0f5c3a] px-5 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
+                >
+                  Conocer programas
+                </button>
+              </div>
+
+              <div className="mt-10 rounded-2xl border border-neutral-200 bg-[#fbfaf5] p-5">
+                <p className="text-sm font-semibold text-neutral-900">
+                  Usuarios demo conectados al dashboard
+                </p>
+
+                <div className="mt-3 space-y-2 text-sm text-neutral-600">
+                  <p>
+                    <span className="font-semibold text-[#0f5c3a]">Admin:</span>{" "}
+                    admin@udea.edu.co / 123456
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#0f5c3a]">Usuario:</span>{" "}
+                    usuario@udea.edu.co / 123456
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-6 text-sm text-neutral-500">
+                <span>Admisiones abiertas</span>
+                <span>Acompañamiento al aspirante</span>
+                <span>Proceso 100% digital</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right */}
+          <div className="relative overflow-hidden bg-[#114d36] px-6 py-10 md:px-10">
+            {/* Imagen de fondo real */}
+            <div className="absolute inset-0">
+              <Image
+                src="/images/udea-campus.jpg"
+                alt="Campus universitario"
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-[#114d36]/65" />
+            </div>
+
+            {/* Decoración */}
+            <div className="absolute right-0 top-0 z-10 h-44 w-44 rounded-bl-[60px] bg-[#0b3d2b]/65" />
+            <div className="absolute bottom-0 left-0 z-10 h-32 w-32 rounded-tr-[50px] bg-[#0b3d2b]/55" />
+
+            <div className="relative z-20 flex h-full items-center justify-center">
+              <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl md:p-8">
+                <p className="text-sm font-medium text-[#0f5c3a]">Acceso al portal</p>
+                <h2 className="mt-2 text-2xl font-bold text-neutral-900">
+                  {tab === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                </h2>
+                <p className="mt-2 text-sm text-neutral-500">
+                  {tab === "login"
+                    ? "Ingresa tus datos para continuar con tu proceso."
+                    : "Regístrate para iniciar tu proceso de inscripción."}
+                </p>
+
+                <div className="mt-6 grid grid-cols-2 rounded-xl bg-neutral-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab("login");
+                      setError("");
+                      setInfoMessage("");
+                    }}
+                    className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                      tab === "login"
+                        ? "bg-white text-[#0f5c3a] shadow-sm"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    Iniciar sesión
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab("register");
+                      setError("");
+                      setInfoMessage("");
+                    }}
+                    className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                      tab === "register"
+                        ? "bg-white text-[#0f5c3a] shadow-sm"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    Registrarse
+                  </button>
+                </div>
+
+                <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+                  {tab === "register" && (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-neutral-700">
+                        Nombre completo
+                      </label>
+                      <div className="flex items-center rounded-xl border border-neutral-200 px-4 py-3 focus-within:border-[#0f5c3a] focus-within:ring-4 focus-within:ring-green-100">
+                        <User size={17} className="mr-2 text-neutral-400" />
+                        <input
+                          type="text"
+                          placeholder="Escribe tu nombre"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full bg-transparent text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-neutral-700">
+                      Correo
+                    </label>
+                    <div className="flex items-center rounded-xl border border-neutral-200 px-4 py-3 focus-within:border-[#0f5c3a] focus-within:ring-4 focus-within:ring-green-100">
+                      <Mail size={17} className="mr-2 text-neutral-400" />
+                      <input
+                        type="email"
+                        placeholder="correo@ejemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-transparent text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-neutral-700">
+                      Contraseña
+                    </label>
+                    <div className="flex items-center rounded-xl border border-neutral-200 px-4 py-3 focus-within:border-[#0f5c3a] focus-within:ring-4 focus-within:ring-green-100">
+                      <Lock size={17} className="mr-2 text-neutral-400" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-transparent text-sm outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-neutral-400 hover:text-neutral-700"
+                      >
+                        {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {tab === "login" && (
+                    <div className="flex items-center justify-between text-sm">
+                      <label className="flex items-center gap-2 text-neutral-600">
+                        <input type="checkbox" className="accent-[#0f5c3a]" />
+                        Recordarme
+                      </label>
+                      <a href="#" className="font-medium text-[#0f5c3a] hover:underline">
+                        ¿Olvidaste tu contraseña?
+                      </a>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                      {error}
+                    </div>
+                  )}
+
+                  {infoMessage && (
+                    <div className="rounded-xl border border-amber-200 bg-[#fffaf0] px-4 py-3 text-sm text-[#8a6d1f]">
+                      {infoMessage}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-xl bg-[#0f5c3a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading
+                      ? "Procesando..."
+                      : tab === "login"
+                      ? "Ingresar al portal"
+                      : "Crear cuenta"}
+                  </button>
+                </form>
+
+                <p className="mt-5 text-center text-sm text-neutral-500">
+                  {tab === "login" ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab(tab === "login" ? "register" : "login");
+                      setError("");
+                      setInfoMessage("");
+                    }}
+                    className="font-semibold text-[#0f5c3a] hover:underline"
+                  >
+                    {tab === "login" ? "Regístrate" : "Inicia sesión"}
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+</file>
+
+<file path="components/dashboard/DashboardCard.tsx">
+import type { ReactNode } from "react";
+
+type DashboardCardProps = {
+  title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  tone?: "white" | "green" | "cream";
+  children: ReactNode;
+};
+
+export default function DashboardCard({
+  title,
+  subtitle,
+  icon,
+  tone = "white",
+  children,
+}: DashboardCardProps) {
+  const toneClass =
+    tone === "green"
+      ? "bg-[#f6fbf7] border-green-100"
+      : tone === "cream"
+      ? "bg-[#fbfaf5] border-[#ece6d9]"
+      : "bg-white border-neutral-200";
+
+  return (
+    <section
+      className={`rounded-[24px] border p-6 shadow-sm transition hover:-translate-y-[2px] md:p-7 ${toneClass}`}
+    >
+      <div className="mb-6 flex items-start gap-4">
+        {icon && (
+          <div className="rounded-2xl bg-white p-3 text-[#0f5c3a] shadow-sm">
+            {icon}
+          </div>
+        )}
+
+        <div>
+          <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
+          {subtitle && (
+            <p className="mt-1 text-sm leading-6 text-neutral-500">
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+</file>
+
+<file path="components/dashboard/DashboardShell.tsx">
+"use client";
+
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Bell,
+  ChevronRight,
+  ClipboardList,
+  FileText,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Search,
+  Settings,
+  ShieldCheck,
+  UserCircle2,
+  Users,
+} from "lucide-react";
+
+type DashboardShellProps = {
+  title: string;
+  subtitle: string;
+  roleLabel: string;
+  activeRole: "admin" | "usuario";
+  children: ReactNode;
+};
+
+export default function DashboardShell({
+  title,
+  subtitle,
+  roleLabel,
+  activeRole,
+  children,
+}: DashboardShellProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
+  const mainNav =
+    activeRole === "admin"
+      ? [
+          {
+            label: "Dashboard",
+            href: "/admin/dashboard",
+            icon: <LayoutDashboard size={18} />,
+          },
+          {
+            label: "Solicitudes",
+            href: "/solicitud-cohorte/informacion",
+            icon: <ClipboardList size={18} />,
+          },
+          {
+            label: "Gestión usuarios",
+            href: "#",
+            icon: <Users size={18} />,
+          },
+          {
+            label: "Revisiones",
+            href: "#",
+            icon: <ShieldCheck size={18} />,
+          },
+          {
+            label: "Configuración",
+            href: "#",
+            icon: <Settings size={18} />,
+          },
+        ]
+      : [
+          {
+            label: "Dashboard",
+            href: "/usuario/dashboard",
+            icon: <LayoutDashboard size={18} />,
+          },
+          {
+            label: "Nueva solicitud",
+            href: "/solicitud-cohorte/informacion",
+            icon: <ClipboardList size={18} />,
+          },
+          {
+            label: "Mis procesos",
+            href: "#",
+            icon: <FileText size={18} />,
+          },
+          {
+            label: "Perfil",
+            href: "#",
+            icon: <UserCircle2 size={18} />,
+          },
+        ];
+
+  return (
+    <main className="min-h-screen bg-[#e9dfdf] px-4 py-8 md:px-8">
+      <section className="mx-auto w-full max-w-[1500px] overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+        <div className="h-2 w-full bg-[#0f5c3a]" />
+
+        <div className="grid min-h-[84vh] lg:grid-cols-[290px_1fr]">
+          {/* Sidebar */}
+          <aside className="border-b border-neutral-200 bg-[#f7faf7] px-6 py-7 lg:border-b-0 lg:border-r">
+            <div className="mb-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-[#0f5c3a]">
+                  U
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">
+                    Universidad
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    Portal de Posgrados
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl bg-[#0f5c3a] px-4 py-4 text-white">
+                <p className="text-xs uppercase tracking-[0.18em] text-green-100">
+                  Sesión activa
+                </p>
+                <p className="mt-2 text-lg font-bold">{roleLabel}</p>
+                <p className="mt-1 text-sm text-white/75">
+                  Acceso al panel institucional
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                  Navegación
+                </p>
+
+                <nav className="space-y-2">
+                  {mainNav.map((item) => {
+                    const active =
+                      pathname === item.href ||
+                      (item.href !== "#" && pathname.startsWith(item.href));
+
+                    return (
+                      <SidebarLink
+                        key={item.label}
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={active}
+                      />
+                    );
+                  })}
+                </nav>
+              </div>
+
+              <div>
+                <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                  Accesos rápidos
+                </p>
+
+                <div className="space-y-3">
+                  <QuickMiniCard
+                    title="Nueva cohorte"
+                    description="Crear y diligenciar una solicitud"
+                    href="/solicitud-cohorte/informacion"
+                  />
+                  <QuickMiniCard
+                    title="Último borrador"
+                    description="Continuar el flujo pendiente"
+                    href="/solicitud-cohorte/descripcion"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0f5c3a] bg-white px-4 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
+              >
+                <LogOut size={18} />
+                Cerrar sesión
+              </button>
+            </div>
+          </aside>
+
+          {/* Main */}
+          <div className="bg-[#fcfcfc]">
+            {/* Top navbar */}
+            <div className="border-b border-neutral-200 bg-white px-6 py-5 md:px-10">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-sm text-neutral-400">
+                    <Home size={15} />
+                    <ChevronRight size={14} />
+                    <span>{roleLabel}</span>
+                    <ChevronRight size={14} />
+                    <span className="text-[#0f5c3a]">{title}</span>
+                  </div>
+
+                  <h1 className="text-3xl font-extrabold text-neutral-900 md:text-4xl">
+                    {title}
+                  </h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-neutral-600 md:text-base">
+                    {subtitle}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex items-center rounded-xl border border-neutral-200 bg-[#fafafa] px-4 py-3">
+                    <Search size={16} className="mr-2 text-neutral-400" />
+                    <input
+                      type="text"
+                      placeholder="Buscar solicitudes, programas, cohortes..."
+                      className="w-full min-w-[240px] bg-transparent text-sm outline-none placeholder:text-neutral-400"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    className="relative rounded-xl border border-neutral-200 bg-white p-3 text-neutral-600 transition hover:bg-neutral-50"
+                  >
+                    <Bell size={18} />
+                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500" />
+                  </button>
+
+                  <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 font-bold text-[#0f5c3a]">
+                      {activeRole === "admin" ? "A" : "U"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">
+                        {activeRole === "admin"
+                          ? "Administrador"
+                          : "Usuario institucional"}
+                      </p>
+                      <p className="text-xs text-neutral-500">{roleLabel}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-8 md:px-10">{children}</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function SidebarLink({
+  href,
+  label,
+  icon,
+  active = false,
+}: {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+        active
+          ? "bg-[#0f5c3a] text-white shadow-sm"
+          : "bg-white text-neutral-700 hover:bg-green-50 hover:text-[#0f5c3a]"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function QuickMiniCard({
+  title,
+  description,
+  href,
+}: {
+  title: string;
+  description: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="block rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-[2px]"
+    >
+      <p className="text-sm font-semibold text-neutral-900">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-neutral-500">{description}</p>
+    </Link>
+  );
+}
+</file>
+
+<file path="components/dashboard/KpiCard.tsx">
+import type { ReactNode } from "react";
+
+type KpiCardProps = {
+  title: string;
+  value: string;
+  change: string;
+  icon: ReactNode;
+  tone?: "green" | "cream" | "white";
+};
+
+export default function KpiCard({
+  title,
+  value,
+  change,
+  icon,
+  tone = "white",
+}: KpiCardProps) {
+  const toneClass =
+    tone === "green"
+      ? "bg-green-50 border-green-200"
+      : tone === "cream"
+      ? "bg-[#fffaf0] border-[#eadfbe]"
+      : "bg-white border-neutral-200";
+
+  return (
+    <div
+      className={`rounded-[22px] border p-5 shadow-sm transition hover:-translate-y-[2px] ${toneClass}`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-neutral-500">{title}</p>
+          <p className="mt-2 text-3xl font-extrabold text-neutral-900">{value}</p>
+          <p className="mt-2 text-sm font-medium text-[#0f5c3a]">{change}</p>
+        </div>
+
+        <div className="rounded-2xl bg-white p-3 text-[#0f5c3a] shadow-sm">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="components/dashboard/StatusBadge.tsx">
+export default function StatusBadge({ status }: { status: string }) {
+  const styles =
+    status === "Borrador"
+      ? "bg-[#fffaf0] text-[#8a6d1f]"
+      : status === "En revisión"
+      ? "bg-green-100 text-[#0f5c3a]"
+      : status === "Pendiente anexos"
+      ? "bg-rose-50 text-rose-600"
+      : status === "Enviada"
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-neutral-100 text-neutral-700";
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>
+      {status}
+    </span>
+  );
+}
+</file>
+
+<file path="components/solicitud/FieldCard.tsx">
+import type { ReactNode } from "react";
+
+type FieldCardProps = {
+  label: string;
+  required?: boolean;
+  icon?: ReactNode;
+  tone?: "white" | "greenTint" | "creamTint";
+  children: ReactNode;
+  className?: string;
+};
+
+export default function FieldCard({
+  label,
+  required = false,
+  icon,
+  tone = "white",
+  children,
+  className = "",
+}: FieldCardProps) {
+  const toneClass =
+    tone === "greenTint"
+      ? "bg-green-50 border-green-200"
+      : tone === "creamTint"
+      ? "bg-[#fffaf0] border-[#eadfbe]"
+      : "bg-white border-neutral-200";
+
+  return (
+    <div
+      className={`rounded-[18px] border p-4 shadow-sm transition hover:-translate-y-[2px] ${toneClass} ${className}`}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-[#0f5c3a]">{icon}</span>}
+          <label className="text-sm font-semibold text-neutral-700">
+            {label}
+          </label>
+        </div>
+
+        {required && (
+          <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-500">
+            Requerido
+          </span>
+        )}
+      </div>
+
+      {children}
+    </div>
+  );
+}
+</file>
+
+<file path="components/solicitud/SectionCard.tsx">
+import type { ReactNode } from "react";
+
+type SectionCardProps = {
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
+  tone?: "softGreen" | "softCream";
+  children: ReactNode;
+};
+
+export default function SectionCard({
+  title,
+  subtitle,
+  icon,
+  tone = "softGreen",
+  children,
+}: SectionCardProps) {
+  const toneClass =
+    tone === "softGreen"
+      ? "bg-[#f6fbf7] border-green-100"
+      : "bg-[#fbfaf5] border-[#ece6d9]";
+
+  return (
+    <section
+      className={`rounded-[24px] border p-6 shadow-sm transition hover:-translate-y-[2px] md:p-7 ${toneClass}`}
+    >
+      <div className="mb-6 flex items-start gap-4">
+        <div className="rounded-2xl bg-white p-3 text-[#0f5c3a] shadow-sm">
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
+          <p className="mt-1 text-sm leading-6 text-neutral-500">{subtitle}</p>
+        </div>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+</file>
+
+<file path="components/solicitud/SolicitudActions.tsx">
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, Save } from "lucide-react";
+
+type SolicitudActionsProps = {
+  prevHref?: string;
+  nextHref?: string;
+  nextLabel?: string;
+};
+
+export default function SolicitudActions({
+  prevHref,
+  nextHref,
+  nextLabel = "Siguiente",
+}: SolicitudActionsProps) {
+  const justifyClass = prevHref
+    ? "sm:items-center sm:justify-between"
+    : "sm:justify-end";
+
+  return (
+    <div className={`mt-8 flex flex-col gap-3 sm:flex-row ${justifyClass}`}>
+      {prevHref ? (
+        <Link
+          href={prevHref}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#0f5c3a] bg-white px-5 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
+        >
+          <ArrowLeft size={16} />
+          Anterior
+        </Link>
+      ) : (
+        <div />
+      )}
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#0f5c3a] bg-white px-5 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
+        >
+          <Save size={16} />
+          Guardar
+        </button>
+
+        {nextHref && (
+          <Link
+            href={nextHref}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+          >
+            {nextLabel}
+            <ArrowRight size={16} />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="components/solicitud/SolicitudShell.tsx">
+import type { ReactNode } from "react";
+import StepProgress from "./StepProgress";
+import { SOLICITUD_COHORTE_STEPS } from "../../lib/solicitud-cohorte/steps";
+
+type SolicitudShellProps = {
+  currentStep: number;
+  description: string;
+  children: ReactNode;
+};
+
+export default function SolicitudShell({
+  currentStep,
+  description,
+  children,
+}: SolicitudShellProps) {
+  return (
+    <main className="min-h-screen bg-[#e9dfdf] px-4 py-8 md:px-8">
+      <section className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+        <div className="h-2 w-full bg-[#0f5c3a]" />
+
+        <div className="border-b border-neutral-200 bg-white px-6 py-7 md:px-10">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center rounded-full bg-green-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5c3a]">
+              Portal de Posgrados
+            </span>
+
+            <h1 className="mt-4 text-3xl font-extrabold text-neutral-900 md:text-4xl">
+              Solicitud de apertura de cohorte
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-neutral-600 md:text-base">
+              {description}
+            </p>
+          </div>
+
+          <StepProgress
+            steps={SOLICITUD_COHORTE_STEPS}
+            currentStep={currentStep}
+          />
+        </div>
+
+        <div className="bg-[#fcfcfc] px-6 py-8 md:px-10">{children}</div>
+
+        <div className="border-t border-neutral-200 bg-white px-6 py-5 text-center text-sm text-neutral-600">
+          © Universidad de Antioquia · Portal de Posgrados
+        </div>
+      </section>
+    </main>
+  );
+}
+</file>
+
+<file path="components/solicitud/StepProgress.tsx">
+"use client";
+
+import Link from "next/link";
+import { Check } from "lucide-react";
+import type { SolicitudStep } from "../../lib/solicitud-cohorte/steps";
+
+type StepProgressProps = {
+  steps: SolicitudStep[];
+  currentStep: number;
+};
+
+export default function StepProgress({
+  steps,
+  currentStep,
+}: StepProgressProps) {
+  return (
+    <div className="mt-8 overflow-x-auto">
+      <div className="flex min-w-[860px] items-center gap-3 pb-2">
+        {steps.map((step, index) => {
+          const stepNumber = index + 1;
+          const isCompleted = stepNumber < currentStep;
+          const isActive = stepNumber === currentStep;
+
+          return (
+            <div key={step.label} className="flex flex-1 items-center gap-3">
+              <Link
+                href={step.href}
+                className="flex flex-col items-center"
+                aria-current={isActive ? "step" : undefined}
+              >
+                <div
+                  className={[
+                    "flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-200",
+                    isCompleted
+                      ? "border-[#0f5c3a] bg-[#0f5c3a] text-white"
+                      : isActive
+                      ? "border-[#0f5c3a] bg-white text-[#0f5c3a] shadow-[0_0_0_5px_rgba(15,92,58,0.12)]"
+                      : "border-neutral-300 bg-neutral-100 text-neutral-500 hover:border-[#0f5c3a]/40",
+                  ].join(" ")}
+                >
+                  {isCompleted ? <Check size={18} /> : stepNumber}
+                </div>
+
+                <span
+                  className={[
+                    "mt-3 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                    isCompleted
+                      ? "bg-green-100 text-[#0f5c3a]"
+                      : isActive
+                      ? "bg-[#0f5c3a] text-white"
+                      : "bg-neutral-100 text-neutral-500",
+                  ].join(" ")}
+                >
+                  {step.label}
+                </span>
+              </Link>
+
+              {index !== steps.length - 1 && (
+                <div className="h-[4px] flex-1 rounded-full bg-neutral-200">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      isCompleted ? "w-full bg-[#0f5c3a]" : "w-0"
+                    }`}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="eslint.config.mjs">
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
+  },
+];
+
+export default eslintConfig;
+</file>
+
+<file path="global.d.ts">
+import type { IStaticMethods } from "preline/dist";
+
+declare global {
+  interface Window {
+    // Optional third-party libraries
+    _;
+    $: typeof import("jquery");
+    jQuery: typeof import("jquery");
+    DataTable;
+    Dropzone;
+    VanillaCalendarPro;
+
+    // Preline UI
+    HSStaticMethods: IStaticMethods;
+  }
+}
+
+export {};
+</file>
+
+<file path="lib/auth/auth.ts">
+export type UserRole = "admin" | "usuario";
+
+export const DEMO_USERS = [
+  {
+    email: "admin@udea.edu.co",
+    password: "123456",
+    role: "admin" as UserRole,
+    name: "Administrador UdeA",
+  },
+  {
+    email: "usuario@udea.edu.co",
+    password: "123456",
+    role: "usuario" as UserRole,
+    name: "Usuario UdeA",
+  },
+];
+
+export function getDashboardPathByRole(role: UserRole) {
+  return role === "admin" ? "/admin/dashboard" : "/usuario/dashboard";
+}
+</file>
+
+<file path="lib/solicitud-cohorte/steps.ts">
+export type SolicitudStep = {
+  label: string;
+  href: string;
+};
+
+export const SOLICITUD_COHORTE_STEPS: SolicitudStep[] = [
+  { label: "Información", href: "/solicitud-cohorte/informacion" },
+  { label: "Descripción", href: "/solicitud-cohorte/descripcion" },
+  { label: "Cohorte", href: "/solicitud-cohorte/cohorte" },
+  { label: "Anexos I", href: "/solicitud-cohorte/anexos-1" },
+  { label: "Anexos II", href: "/solicitud-cohorte/anexos-2" },
+  { label: "Enviar", href: "/solicitud-cohorte/enviar" },
+];
+</file>
+
+<file path="lib/solicitud-cohorte/ui.ts">
+export const solicitudInputClass =
+  "w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#0f5c3a] focus:ring-4 focus:ring-green-100";
+</file>
+
+<file path="middleware.ts">
+import { NextRequest, NextResponse } from "next/server";
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const token = request.cookies.get("auth_token")?.value;
+  const role = request.cookies.get("user_role")?.value;
+
+  const isLoggedIn = Boolean(token);
+  const isLoginPage = pathname === "/login";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isUserRoute = pathname.startsWith("/usuario");
+
+  if (!isLoggedIn && (isAdminRoute || isUserRoute)) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (isLoggedIn && isLoginPage) {
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+
+    if (role === "usuario") {
+      return NextResponse.redirect(new URL("/usuario/dashboard", request.url));
+    }
+  }
+
+  if (isAdminRoute && role !== "admin") {
+    return NextResponse.redirect(new URL("/usuario/dashboard", request.url));
+  }
+
+  if (isUserRoute && role !== "usuario") {
+    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/login", "/admin/:path*", "/usuario/:path*"],
+};
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+</file>
+
+<file path="package.json">
+{
+  "name": "sigepos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.544.0",
+    "next": "15.5.0",
+    "preline": "^3.2.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: ["@tailwindcss/postcss"],
+};
+
+export default config;
+</file>
+
+<file path="src/app/admin/dashboard/page.tsx">
+import {
+  Activity,
+  BellRing,
+  CheckCircle2,
+  ClipboardList,
+  FileClock,
+  FolderKanban,
+  Paperclip,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import DashboardShell from "../../../../components/dashboard/DashboardShell";
+import DashboardCard from "../../../../components/dashboard/DashboardCard";
+import KpiCard from "../../../../components/dashboard/KpiCard";
+import StatusBadge from "../../../../components/dashboard/StatusBadge";
+
+const recentSolicitudes = [
+  {
+    id: "SOL-2026-001",
+    programa: "Ingeniería de Sistemas",
+    cohorte: "2026-1",
+    estado: "En revisión",
+    fecha: "2026-04-18",
+  },
+  {
+    id: "SOL-2026-002",
+    programa: "Ciencia de Datos",
+    cohorte: "2026-1",
+    estado: "Pendiente anexos",
+    fecha: "2026-04-17",
+  },
+  {
+    id: "SOL-2026-003",
+    programa: "Arquitectura de Software",
+    cohorte: "2026-2",
+    estado: "Borrador",
+    fecha: "2026-04-16",
+  },
+  {
+    id: "SOL-2026-004",
+    programa: "Maestría en Educación",
+    cohorte: "2026-1",
+    estado: "Enviada",
+    fecha: "2026-04-15",
+  },
+];
+
+export default function AdminDashboardPage() {
+  return (
+    <DashboardShell
+      title="Dashboard administrador"
+      subtitle="Supervise solicitudes, valide anexos, controle estados y gestione el flujo institucional del portal."
+      roleLabel="Administrador"
+      activeRole="admin"
+    >
+      <div className="space-y-8">
+        <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            title="Solicitudes activas"
+            value="18"
+            change="+3 esta semana"
+            icon={<ClipboardList size={18} />}
+            tone="green"
+          />
+          <KpiCard
+            title="En revisión"
+            value="7"
+            change="2 priorizadas hoy"
+            icon={<ShieldCheck size={18} />}
+            tone="cream"
+          />
+          <KpiCard
+            title="Anexos pendientes"
+            value="4"
+            change="1 nueva alerta"
+            icon={<Paperclip size={18} />}
+            tone="white"
+          />
+          <KpiCard
+            title="Usuarios activos"
+            value="24"
+            change="+5 ingresos recientes"
+            icon={<Users size={18} />}
+            tone="green"
+          />
+        </section>
+
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <DashboardCard
+            title="Flujo administrativo"
+            subtitle="Vista general del estado operativo del portal."
+            icon={<FolderKanban size={18} />}
+            tone="green"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <InfoPanel
+                title="Solicitudes listas para validación"
+                value="5"
+                text="Documentación completa y listas para revisión formal."
+              />
+              <InfoPanel
+                title="Procesos con bloqueo"
+                value="2"
+                text="Requieren atención por inconsistencias detectadas."
+              />
+              <InfoPanel
+                title="Cohortes activas"
+                value="5"
+                text="Con seguimiento administrativo en este periodo."
+              />
+              <InfoPanel
+                title="Tiempo promedio de revisión"
+                value="2.4 días"
+                text="Promedio institucional actualizado."
+              />
+            </div>
+          </DashboardCard>
+
+          <DashboardCard
+            title="Alertas prioritarias"
+            subtitle="Elementos que requieren atención inmediata."
+            icon={<BellRing size={18} />}
+            tone="cream"
+          >
+            <div className="space-y-4">
+              <AlertItem
+                title="Solicitudes con anexos incompletos"
+                description="Hay 4 procesos con soportes faltantes."
+                priority="alta"
+              />
+              <AlertItem
+                title="Revisión final pendiente"
+                description="2 solicitudes están listas para aprobación."
+                priority="media"
+              />
+              <AlertItem
+                title="Cierre cercano de convocatoria"
+                description="Una cohorte cierra inscripciones en menos de 48 horas."
+                priority="baja"
+              />
+            </div>
+          </DashboardCard>
+        </div>
+
+        <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+          <DashboardCard
+            title="Solicitudes recientes"
+            subtitle="Últimos movimientos registrados en el sistema."
+            icon={<FileClock size={18} />}
+            tone="white"
+          >
+            <div className="overflow-hidden rounded-[18px] border border-neutral-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-[#f8faf8]">
+                    <tr className="text-left text-neutral-600">
+                      <th className="px-4 py-3 font-semibold">Código</th>
+                      <th className="px-4 py-3 font-semibold">Programa</th>
+                      <th className="px-4 py-3 font-semibold">Cohorte</th>
+                      <th className="px-4 py-3 font-semibold">Estado</th>
+                      <th className="px-4 py-3 font-semibold">Fecha</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {recentSolicitudes.map((row) => (
+                      <tr key={row.id} className="border-t border-neutral-200">
+                        <td className="px-4 py-3 font-semibold text-[#0f5c3a]">
+                          {row.id}
+                        </td>
+                        <td className="px-4 py-3 text-neutral-700">{row.programa}</td>
+                        <td className="px-4 py-3 text-neutral-700">{row.cohorte}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={row.estado} />
+                        </td>
+                        <td className="px-4 py-3 text-neutral-700">{row.fecha}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </DashboardCard>
+
+          <div className="space-y-8">
+            <DashboardCard
+              title="Rendimiento del proceso"
+              subtitle="Indicadores clave del ciclo de revisión."
+              icon={<Activity size={18} />}
+              tone="green"
+            >
+              <div className="space-y-5">
+                <ProgressRow label="Solicitudes revisadas" value={84} />
+                <ProgressRow label="Anexos verificados" value={68} />
+                <ProgressRow label="Procesos enviados" value={52} />
+                <ProgressRow label="Aprobaciones finales" value={41} />
+              </div>
+            </DashboardCard>
+
+            <div className="overflow-hidden rounded-[24px] bg-[#0f5c3a] text-white shadow-lg">
+              <div className="border-b border-white/10 px-6 py-5">
+                <p className="text-sm font-semibold text-green-100">
+                  Panel ejecutivo
+                </p>
+                <h3 className="mt-1 text-xl font-bold">Resumen institucional</h3>
+              </div>
+
+              <div className="grid gap-4 p-6">
+                <MetricBlock label="Solicitudes en borrador" value="6" />
+                <MetricBlock label="Solicitudes enviadas" value="12" />
+                <MetricBlock label="Procesos aprobados" value="9" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </DashboardShell>
+  );
+}
+
+function InfoPanel({
+  title,
+  value,
+  text,
+}: {
+  title: string;
+  value: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-neutral-500">{title}</p>
+      <p className="mt-2 text-2xl font-extrabold text-neutral-900">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+    </div>
+  );
+}
+
+function AlertItem({
+  title,
+  description,
+  priority,
+}: {
+  title: string;
+  description: string;
+  priority: "alta" | "media" | "baja";
+}) {
+  const badgeClass =
+    priority === "alta"
+      ? "bg-rose-50 text-rose-600"
+      : priority === "media"
+      ? "bg-[#fffaf0] text-[#8a6d1f]"
+      : "bg-green-100 text-[#0f5c3a]";
+
+  return (
+    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-sm font-bold text-neutral-900">{title}</h3>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
+          {priority}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-neutral-600">{description}</p>
+    </div>
+  );
+}
+
+function ProgressRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-sm">
+        <span className="font-medium text-neutral-700">{label}</span>
+        <span className="font-semibold text-[#0f5c3a]">{value}%</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+        <div
+          className="h-full rounded-full bg-[#0f5c3a]"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MetricBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl bg-white/10 px-4 py-4">
+      <p className="text-sm text-white/75">{label}</p>
+      <p className="mt-1 text-2xl font-bold">{value}</p>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/api/auth/login/route.ts">
+import { NextResponse } from "next/server";
+import { DEMO_USERS, getDashboardPathByRole } from "../../../../../lib/auth/auth";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+
+    const user = DEMO_USERS.find(
+      (u) => u.email.toLowerCase() === email && u.password === password
+    );
+
+    if (!user) {
+      return NextResponse.json(
+        { ok: false, message: "Credenciales inválidas" },
+        { status: 401 }
+      );
+    }
+
+    const response = NextResponse.json({
+      ok: true,
+      role: user.role,
+      name: user.name,
+      redirectTo: getDashboardPathByRole(user.role),
+    });
+
+    response.cookies.set("auth_token", "demo-session-token", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    response.cookies.set("user_role", user.role, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    response.cookies.set("user_name", user.name, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return response;
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "Error procesando el login" },
+      { status: 500 }
+    );
+  }
+}
+</file>
+
+<file path="src/app/api/auth/logout/route.ts">
+import { NextResponse } from "next/server";
+
+export async function POST() {
+  const response = NextResponse.json({ ok: true });
+
+  response.cookies.set("auth_token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+  });
+
+  response.cookies.set("user_role", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+  });
+
+  response.cookies.set("user_name", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+  });
+
+  return response;
+}
+</file>
+
+<file path="src/app/globals.css">
+@import "tailwindcss";
+
+html, body {
+  height: 100%;
+   /* 🔒 Bloquea el scroll global */
+}
+
+* {
+  scrollbar-width: none;       /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;               /* Chrome / Edge / Safari */
+}
+
+@import "tailwindcss";
+
+@import "preline/variants.css";
+@source "../node_modules/preline/dist/*.js";
+
+/* Optional Preline UI Datepicker Plugin */
+/* @import "preline/src/plugins/datepicker/styles.css"; */
+
+/* Plugins */
+/* @plugin "@tailwindcss/forms"; */
+</file>
+
+<file path="src/app/layout.tsx">
+import "./globals.css";
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="src/app/login/page.tsx">
+import LoginForm from "../../../components/auth/LoginForm";
+
+export default function LoginPage() {
+  return <LoginForm />;
+}
+</file>
+
+<file path="src/app/page.tsx">
+import { redirect } from "next/navigation";
+
+export default function HomePage() {
+  redirect("/login");
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/anexos-1/page.tsx">
+"use client";
+
+import { useState } from "react";
+import {
+  CircleAlert,
+  ClipboardList,
+  Plus,
+  Upload,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+
+type UploadCardProps = {
+  title: string;
+  required?: boolean;
+};
+
+function UploadCard({ title, required = false }: UploadCardProps) {
+  const [fileName, setFileName] = useState("");
+
+  return (
+    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px]">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-medium text-neutral-700">{title}</h3>
+        </div>
+
+        <CircleAlert size={16} className="mt-0.5 text-neutral-400" />
+      </div>
+
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-[#fafafa] px-4 py-3 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50">
+        <Upload size={16} />
+        Upload Files
+        <input
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const selected = e.target.files?.[0];
+            setFileName(selected?.name || "");
+          }}
+        />
+      </label>
+
+      {fileName && (
+        <p className="mt-3 text-sm text-[#0f5c3a]">{fileName}</p>
+      )}
+
+      {required && (
+        <p className="mt-3 text-xs font-medium text-rose-400">Required</p>
+      )}
+    </div>
+  );
+}
+
+export default function Anexos1Page() {
+  return (
+    <SolicitudShell
+      currentStep={4}
+      description="Adjunte los soportes requeridos para la primera y segunda cohorte."
+    >
+      <div className="mx-auto max-w-5xl">
+        <SectionCard
+          title="Anexos para primera y segunda cohorte"
+          subtitle="Cargue los documentos obligatorios para continuar con el proceso."
+          icon={<ClipboardList size={18} />}
+          tone="softGreen"
+        >
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 border-b border-neutral-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+              >
+                AGREGAR DESCRIPCIÓN
+                <Plus size={16} />
+              </button>
+
+              <div className="text-xs text-neutral-400">
+                Adjunte la documentación solicitada
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <UploadCard
+                title="Aval del Consejo de Unidad Académica"
+                required
+              />
+
+              <UploadCard
+                title="Aval del estudio de costos de la Vicerrectoría de Investigación"
+                required
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        <SolicitudActions
+          prevHref="/solicitud-cohorte/cohorte"
+          nextHref="/solicitud-cohorte/anexos-2"
+        />
+      </div>
+    </SolicitudShell>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/anexos-2/page.tsx">
+"use client";
+
+import { useState } from "react";
+import {
+  CircleAlert,
+  ClipboardList,
+  Plus,
+  Upload,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+
+type UploadCardProps = {
+  title: string;
+  required?: boolean;
+};
+
+function UploadCard({ title, required = false }: UploadCardProps) {
+  const [fileName, setFileName] = useState("");
+
+  return (
+    <div className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px]">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <h3 className="text-sm font-medium text-neutral-700">{title}</h3>
+        <CircleAlert size={16} className="mt-0.5 text-neutral-400" />
+      </div>
+
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-[#fafafa] px-4 py-3 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50">
+        <Upload size={16} />
+        Upload Files
+        <input
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const selected = e.target.files?.[0];
+            setFileName(selected?.name || "");
+          }}
+        />
+      </label>
+
+      {fileName && (
+        <p className="mt-3 text-sm text-[#0f5c3a]">{fileName}</p>
+      )}
+
+      {required && (
+        <p className="mt-3 text-xs font-medium text-rose-400">Required</p>
+      )}
+    </div>
+  );
+}
+
+export default function Anexos2Page() {
+  return (
+    <SolicitudShell
+      currentStep={5}
+      description="Adjunte los soportes para cohortes adicionales y validaciones complementarias."
+    >
+      <div className="mx-auto max-w-5xl">
+        <SectionCard
+          title="Anexos para terceras cohortes en adelante"
+          subtitle="Cargue los documentos requeridos para continuar con el proceso."
+          icon={<ClipboardList size={18} />}
+          tone="softGreen"
+        >
+          <div className="space-y-6">
+            {/* HEADER */}
+            <div className="flex flex-col gap-3 border-b border-neutral-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+              >
+                AGREGAR DESCRIPCIÓN
+                <Plus size={16} />
+              </button>
+
+              <div className="text-xs text-neutral-400">
+                Adjunte la documentación requerida
+              </div>
+            </div>
+
+            {/* UPLOADS */}
+            <div className="space-y-6">
+              <UploadCard
+                title="Aval del Consejo de Unidad Académica"
+                required
+              />
+
+              <UploadCard
+                title="Aval del estudio de costos de la Vicerrectoría de Investigación"
+                required
+              />
+
+              <UploadCard
+                title="Autoevaluación del programa"
+                required
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        <SolicitudActions
+          prevHref="/solicitud-cohorte/anexos-1"
+          nextHref="/solicitud-cohorte/enviar"
+        />
+      </div>
+    </SolicitudShell>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/cohorte/page.tsx">
+"use client";
+
+import { useState } from "react";
+import {
+  ChevronDown,
+  ClipboardList,
+  GraduationCap,
+  Info,
+  ListOrdered,
+  Plus,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+import { solicitudInputClass } from "../../../../lib/solicitud-cohorte/ui";
+
+type CohorteForm = {
+  estimuloDescripcion: string;
+  numeroPlazas: string;
+};
+
+type AccordionItemProps = {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+};
+
+function AccordionItem({
+  title,
+  icon,
+  children,
+  defaultOpen = false,
+}: AccordionItemProps) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="overflow-hidden rounded-[18px] border border-neutral-200 bg-white shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-neutral-50"
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-green-50 p-2.5 text-[#0f5c3a]">
+            {icon}
+          </div>
+          <span className="text-sm font-medium text-neutral-700">{title}</span>
+        </div>
+
+        <ChevronDown
+          size={18}
+          className={`text-neutral-400 transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {open && <div className="border-t border-neutral-200 px-5 py-5">{children}</div>}
+    </div>
+  );
+}
+
+export default function CohortePage() {
+  const [form, setForm] = useState<CohorteForm>({
+    estimuloDescripcion: "",
+    numeroPlazas: "",
+  });
+
+  function updateField<K extends keyof CohorteForm>(
+    key: K,
+    value: CohorteForm[K]
+  ) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  return (
+    <SolicitudShell
+      currentStep={3}
+      description="Configure la información asociada a la cohorte y a los estímulos definidos para esta inscripción."
+    >
+      <div className="mx-auto max-w-5xl">
+        <SectionCard
+          title="Estudiante instructor"
+          subtitle="Defina la información relacionada con este componente de la cohorte."
+          icon={<GraduationCap size={18} />}
+          tone="softGreen"
+        >
+          <div className="space-y-5">
+            <div className="flex flex-col gap-3 border-b border-neutral-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+              >
+                AGREGAR DESCRIPCIÓN
+                <Plus size={16} />
+              </button>
+
+              <div className="text-xs text-neutral-400">
+                Complete la información requerida para esta sección
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <AccordionItem
+                title="Información sobre el Estímulo Estudiante Instructor"
+                icon={<Info size={16} />}
+                defaultOpen
+              >
+                <div className="space-y-4">
+                  <label className="block text-sm font-semibold text-neutral-700">
+                    Descripción del estímulo
+                  </label>
+                  <textarea
+                    rows={5}
+                    placeholder="Escriba aquí la descripción del estímulo para estudiante instructor..."
+                    value={form.estimuloDescripcion}
+                    onChange={(e) =>
+                      updateField("estimuloDescripcion", e.target.value)
+                    }
+                    className={`${solicitudInputClass} resize-none`}
+                  />
+                </div>
+              </AccordionItem>
+
+              <AccordionItem
+                title="Número de plazas de estudiante instructor que el programa va a ofrecer en esta cohorte"
+                icon={<ListOrdered size={16} />}
+              >
+                <div className="space-y-4">
+                  <label className="block text-sm font-semibold text-neutral-700">
+                    Número de plazas
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Ingrese el número de plazas"
+                    value={form.numeroPlazas}
+                    onChange={(e) => updateField("numeroPlazas", e.target.value)}
+                    className={solicitudInputClass}
+                  />
+                </div>
+              </AccordionItem>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SolicitudActions
+          prevHref="/solicitud-cohorte/descripcion"
+          nextHref="/solicitud-cohorte/anexos-1"
+        />
+      </div>
+    </SolicitudShell>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/descripcion/page.tsx">
+"use client";
+
+import { useState } from "react";
+import {
+  BadgeCheck,
+  BookOpenCheck,
+  Building2,
+  ClipboardList,
+  FileSearch,
+  FileText,
+  ListChecks,
+  MapPin,
+  UserRound,
+  Users,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import FieldCard from "../../../../components/solicitud/FieldCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+import { solicitudInputClass } from "../../../../lib/solicitud-cohorte/ui";
+
+type FormData = {
+  perfilAspirante: string;
+  mecanismoIngreso: string;
+  numeroAdmitidos: string;
+  criteriosSeleccion: string;
+  requisitosIngreso: string;
+  ciudadOferta: string;
+  criteriosClasificacion: string;
+  modalidadProceso: string;
+  tipoPrueba: string;
+};
+
+export default function DescripcionPage() {
+  const [form, setForm] = useState<FormData>({
+    perfilAspirante: "",
+    mecanismoIngreso: "",
+    numeroAdmitidos: "",
+    criteriosSeleccion: "",
+    requisitosIngreso: "",
+    ciudadOferta: "",
+    criteriosClasificacion: "",
+    modalidadProceso: "",
+    tipoPrueba: "",
+  });
+
+  function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  return (
+    <SolicitudShell
+      currentStep={2}
+      description="Diligencie la descripción del proceso de admisión y los criterios asociados al ingreso de aspirantes."
+    >
+      <SectionCard
+        title="Descripción"
+        subtitle="Configure los elementos que definen el perfil del aspirante y el proceso de ingreso."
+        icon={<ClipboardList size={18} />}
+        tone="softGreen"
+      >
+        <div className="space-y-5">
+          <FieldCard
+            label="Perfil del aspirante"
+            required
+            icon={<UserRound size={16} />}
+            tone="greenTint"
+          >
+            <textarea
+              rows={5}
+              placeholder="Describa el perfil esperado del aspirante..."
+              value={form.perfilAspirante}
+              onChange={(e) => updateField("perfilAspirante", e.target.value)}
+              className={`${solicitudInputClass} resize-none`}
+            />
+          </FieldCard>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <FieldCard
+              label="Mecanismo de ingreso"
+              required
+              icon={<ListChecks size={16} />}
+              tone="white"
+            >
+              <select
+                value={form.mecanismoIngreso}
+                onChange={(e) => updateField("mecanismoIngreso", e.target.value)}
+                className={solicitudInputClass}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="entrevista">Entrevista</option>
+                <option value="prueba">Prueba</option>
+                <option value="mixto">Mixto</option>
+              </select>
+            </FieldCard>
+
+            <FieldCard
+              label="Número de admitidos por cohorte"
+              required
+              icon={<Users size={16} />}
+              tone="creamTint"
+            >
+              <select
+                value={form.numeroAdmitidos}
+                onChange={(e) => updateField("numeroAdmitidos", e.target.value)}
+                className={solicitudInputClass}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="30">30</option>
+              </select>
+            </FieldCard>
+
+            <FieldCard
+              label="Criterios de selección"
+              required
+              icon={<FileSearch size={16} />}
+              tone="greenTint"
+            >
+              <textarea
+                rows={4}
+                placeholder="Describa los criterios de selección..."
+                value={form.criteriosSeleccion}
+                onChange={(e) => updateField("criteriosSeleccion", e.target.value)}
+                className={`${solicitudInputClass} resize-none`}
+              />
+            </FieldCard>
+
+            <FieldCard
+              label="Requisitos de ingreso"
+              required
+              icon={<BookOpenCheck size={16} />}
+              tone="white"
+            >
+              <textarea
+                rows={4}
+                placeholder="Detalle los requisitos de ingreso..."
+                value={form.requisitosIngreso}
+                onChange={(e) => updateField("requisitosIngreso", e.target.value)}
+                className={`${solicitudInputClass} resize-none`}
+              />
+            </FieldCard>
+
+            <FieldCard
+              label="Ciudad o lugar de oferta"
+              required
+              icon={<MapPin size={16} />}
+              tone="white"
+            >
+              <input
+                type="text"
+                placeholder="Ingrese la ciudad"
+                value={form.ciudadOferta}
+                onChange={(e) => updateField("ciudadOferta", e.target.value)}
+                className={solicitudInputClass}
+              />
+            </FieldCard>
+
+            <FieldCard
+              label="Criterios de clasificación"
+              required
+              icon={<BadgeCheck size={16} />}
+              tone="creamTint"
+            >
+              <input
+                type="text"
+                placeholder="Ingrese el criterio"
+                value={form.criteriosClasificacion}
+                onChange={(e) =>
+                  updateField("criteriosClasificacion", e.target.value)
+                }
+                className={solicitudInputClass}
+              />
+            </FieldCard>
+
+            <FieldCard
+              label="Modalidad del proceso"
+              required
+              icon={<Building2 size={16} />}
+              tone="greenTint"
+            >
+              <select
+                value={form.modalidadProceso}
+                onChange={(e) => updateField("modalidadProceso", e.target.value)}
+                className={solicitudInputClass}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="presencial">Presencial</option>
+                <option value="virtual">Virtual</option>
+                <option value="hibrida">Híbrida</option>
+              </select>
+            </FieldCard>
+
+            <FieldCard
+              label="Tipo de prueba o evaluación"
+              required
+              icon={<FileText size={16} />}
+              tone="white"
+            >
+              <select
+                value={form.tipoPrueba}
+                onChange={(e) => updateField("tipoPrueba", e.target.value)}
+                className={solicitudInputClass}
+              >
+                <option value="">Seleccione una opción</option>
+                <option value="escrita">Escrita</option>
+                <option value="oral">Oral</option>
+                <option value="entrevista">Entrevista</option>
+                <option value="mixta">Mixta</option>
+              </select>
+            </FieldCard>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SolicitudActions
+        prevHref="/solicitud-cohorte/informacion"
+        nextHref="/solicitud-cohorte/cohorte"
+      />
+    </SolicitudShell>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/enviar/page.tsx">
+"use client";
+
+import {
+  CheckCircle2,
+  ClipboardList,
+  FileCheck,
+  GraduationCap,
+  Paperclip,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+
+function ReviewCard({
+  title,
+  description,
+  icon,
+  tone = "green",
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  tone?: "green" | "cream" | "white";
+}) {
+  const toneClass =
+    tone === "green"
+      ? "border-green-200 bg-green-50"
+      : tone === "cream"
+      ? "border-[#eadfbe] bg-[#fffaf0]"
+      : "border-neutral-200 bg-white";
+
+  return (
+    <div
+      className={`rounded-[18px] border p-5 shadow-sm transition hover:-translate-y-[2px] ${toneClass}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl bg-white p-3 text-[#0f5c3a] shadow-sm">
+          {icon}
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">{title}</p>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function EnviarPage() {
+  return (
+    <SolicitudShell
+      currentStep={6}
+      description="Revise la información registrada antes de enviar la solicitud de apertura de cohorte."
+    >
+      <div className="mx-auto max-w-5xl space-y-8">
+        <SectionCard
+          title="Revisión final"
+          subtitle="Verifique que toda la información y anexos estén completos antes de realizar el envío."
+          icon={<ClipboardList size={18} />}
+          tone="softGreen"
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <ReviewCard
+              title="Información general"
+              description="Confirme que el tipo de solicitud, fechas, nivel, unidad académica y programa estén correctos."
+              icon={<FileCheck size={18} />}
+              tone="green"
+            />
+
+            <ReviewCard
+              title="Descripción del proceso"
+              description="Revise perfil del aspirante, criterios de selección, requisitos de ingreso y modalidad del proceso."
+              icon={<CheckCircle2 size={18} />}
+              tone="cream"
+            />
+
+            <ReviewCard
+              title="Configuración de cohorte"
+              description="Valide la información asociada a estudiante instructor y demás datos definidos para la cohorte."
+              icon={<GraduationCap size={18} />}
+              tone="white"
+            />
+
+            <ReviewCard
+              title="Anexos cargados"
+              description="Asegúrese de haber adjuntado todos los documentos requeridos para las cohortes correspondientes."
+              icon={<Paperclip size={18} />}
+              tone="green"
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Confirmación institucional"
+          subtitle="Al enviar, la solicitud quedará registrada para revisión formal."
+          icon={<ShieldCheck size={18} />}
+          tone="softCream"
+        >
+          <div className="rounded-[18px] border border-[#0f5c3a] bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-green-100 p-3 text-[#0f5c3a]">
+                <ShieldCheck size={18} />
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Importante
+                </p>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">
+                  Una vez enviada, la solicitud pasará al proceso de revisión
+                  institucional. Antes de continuar, verifique que toda la
+                  información diligenciada y los anexos cargados sean correctos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <SolicitudActions prevHref="/solicitud-cohorte/anexos-2" />
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f5c3a] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0b4a2f]"
+          >
+            Enviar solicitud
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
+    </SolicitudShell>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/informacion/page.tsx">
+"use client";
+
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  ArrowRight,
+  BellRing,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  FileBadge2,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  Hash,
+  ShieldCheck,
+} from "lucide-react";
+import SolicitudShell from "../../../../components/solicitud/SolicitudShell";
+import SectionCard from "../../../../components/solicitud/SectionCard";
+import FieldCard from "../../../../components/solicitud/FieldCard";
+import SolicitudActions from "../../../../components/solicitud/SolicitudActions";
+import { solicitudInputClass } from "../../../../lib/solicitud-cohorte/ui";
+
+type FormData = {
+  tipoSolicitud: string;
+  fechaSolicitud: string;
+  numeroActa: string;
+  fechaAprobacion: string;
+  nivel: string;
+  unidadAcademica: string;
+  programa: string;
+  codigoPrograma: string;
+};
+
+export default function InformacionPage() {
+  const [form, setForm] = useState<FormData>({
+    tipoSolicitud: "",
+    fechaSolicitud: "",
+    numeroActa: "",
+    fechaAprobacion: "",
+    nivel: "",
+    unidadAcademica: "",
+    programa: "",
+    codigoPrograma: "",
+  });
+
+  const completedFields = useMemo(() => {
+    return Object.values(form).filter((value) => value.trim() !== "").length;
+  }, [form]);
+
+  const completion = Math.round(
+    (completedFields / Object.keys(form).length) * 100
+  );
+
+  function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  return (
+    <SolicitudShell
+      currentStep={1}
+      description="Complete la información requerida para registrar la solicitud siguiendo el flujo establecido por el portal institucional."
+    >
+      <div className="grid gap-8 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="space-y-8">
+          <SectionCard
+            title="Información general"
+            subtitle="Datos administrativos y de radicación."
+            icon={<ClipboardList size={18} />}
+            tone="softGreen"
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <FieldCard
+                label="Tipo de solicitud"
+                required
+                icon={<FileText size={16} />}
+                tone="white"
+              >
+                <select
+                  value={form.tipoSolicitud}
+                  onChange={(e) => updateField("tipoSolicitud", e.target.value)}
+                  className={solicitudInputClass}
+                >
+                  <option value="">Seleccione una opción</option>
+                  <option value="apertura">Apertura</option>
+                  <option value="renovacion">Renovación</option>
+                  <option value="modificacion">Modificación</option>
+                </select>
+              </FieldCard>
+
+              <FieldCard
+                label="Fecha de la solicitud"
+                required
+                icon={<CalendarDays size={16} />}
+                tone="greenTint"
+              >
+                <input
+                  type="date"
+                  value={form.fechaSolicitud}
+                  onChange={(e) => updateField("fechaSolicitud", e.target.value)}
+                  className={solicitudInputClass}
+                />
+              </FieldCard>
+
+              <FieldCard
+                label="Número de acta"
+                required
+                icon={<Hash size={16} />}
+                tone="white"
+              >
+                <input
+                  type="text"
+                  placeholder="Ej. ACT-2026-014"
+                  value={form.numeroActa}
+                  onChange={(e) => updateField("numeroActa", e.target.value)}
+                  className={solicitudInputClass}
+                />
+              </FieldCard>
+
+              <FieldCard
+                label="Fecha aprobación del consejo"
+                required
+                icon={<CalendarDays size={16} />}
+                tone="greenTint"
+              >
+                <input
+                  type="date"
+                  value={form.fechaAprobacion}
+                  onChange={(e) =>
+                    updateField("fechaAprobacion", e.target.value)
+                  }
+                  className={solicitudInputClass}
+                />
+              </FieldCard>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Información académica"
+            subtitle="Datos del programa y unidad académica."
+            icon={<GraduationCap size={18} />}
+            tone="softCream"
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <FieldCard
+                label="Nivel"
+                required
+                icon={<GraduationCap size={16} />}
+                tone="white"
+              >
+                <select
+                  value={form.nivel}
+                  onChange={(e) => updateField("nivel", e.target.value)}
+                  className={solicitudInputClass}
+                >
+                  <option value="">Seleccione una opción</option>
+                  <option value="especializacion">Especialización</option>
+                  <option value="maestria">Maestría</option>
+                  <option value="doctorado">Doctorado</option>
+                </select>
+              </FieldCard>
+
+              <FieldCard
+                label="Unidad académica"
+                required
+                icon={<Building2 size={16} />}
+                tone="creamTint"
+              >
+                <select
+                  value={form.unidadAcademica}
+                  onChange={(e) =>
+                    updateField("unidadAcademica", e.target.value)
+                  }
+                  className={solicitudInputClass}
+                >
+                  <option value="">Seleccione una opción</option>
+                  <option value="ingenieria">Facultad de Ingeniería</option>
+                  <option value="ciencias">Facultad de Ciencias Exactas</option>
+                  <option value="sociales">Facultad de Ciencias Sociales</option>
+                </select>
+              </FieldCard>
+
+              <FieldCard
+                label="Programa"
+                required
+                icon={<FolderOpen size={16} />}
+                tone="white"
+              >
+                <select
+                  value={form.programa}
+                  onChange={(e) => updateField("programa", e.target.value)}
+                  className={solicitudInputClass}
+                >
+                  <option value="">Seleccione una opción</option>
+                  <option value="sistemas">Ingeniería de Sistemas</option>
+                  <option value="datos">Ciencia de Datos</option>
+                  <option value="software">Arquitectura de Software</option>
+                </select>
+              </FieldCard>
+
+              <FieldCard
+                label="Código del programa"
+                required
+                icon={<Hash size={16} />}
+                tone="creamTint"
+              >
+                <input
+                  type="text"
+                  placeholder="Ej. 50701"
+                  value={form.codigoPrograma}
+                  onChange={(e) => updateField("codigoPrograma", e.target.value)}
+                  className={solicitudInputClass}
+                />
+              </FieldCard>
+            </div>
+          </SectionCard>
+
+          <SolicitudActions nextHref="/solicitud-cohorte/descripcion" />
+        </div>
+
+        <aside className="space-y-6">
+          <div className="overflow-hidden rounded-[24px] bg-[#0f5c3a] text-white shadow-lg">
+            <div className="border-b border-white/10 px-6 py-5">
+              <p className="text-sm font-semibold text-green-100">
+                Resumen del formulario
+              </p>
+              <h3 className="mt-1 text-xl font-bold">
+                Avance de diligenciamiento
+              </h3>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="text-white/75">Completado</span>
+                <span className="font-bold text-white">{completion}%</span>
+              </div>
+
+              <div className="h-3 overflow-hidden rounded-full bg-white/15">
+                <div
+                  className="h-full rounded-full bg-white transition-all duration-300"
+                  style={{ width: `${completion}%` }}
+                />
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <SummaryItem
+                  label="Tipo de solicitud"
+                  value={form.tipoSolicitud || "Pendiente"}
+                />
+                <SummaryItem
+                  label="Fecha solicitud"
+                  value={form.fechaSolicitud || "Pendiente"}
+                />
+                <SummaryItem
+                  label="Nivel"
+                  value={form.nivel || "Pendiente"}
+                />
+                <SummaryItem
+                  label="Programa"
+                  value={form.programa || "Pendiente"}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-green-200 bg-green-50 p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-white p-3 text-[#0f5c3a] shadow-sm">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Recomendaciones
+                </p>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">
+                  Verifique que las fechas correspondan a los actos
+                  administrativos y utilice el código oficial del programa.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-[#0f5c3a] bg-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-green-100 p-3 text-[#0f5c3a]">
+                <BellRing size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Aviso importante
+                </p>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">
+                  Los campos obligatorios deben completarse antes de avanzar a la
+                  siguiente etapa.
+                </p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </SolicitudShell>
+  );
+}
+
+function SummaryItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm">
+      <span className="text-white/75">{label}</span>
+      <span className="max-w-[55%] truncate font-semibold text-white">
+        {value}
+      </span>
+    </div>
+  );
+}
+</file>
+
+<file path="src/app/solicitud-cohorte/page.tsx">
+import { redirect } from "next/navigation";
+
+export default function SolicitudCohorteIndexPage() {
+  redirect("/solicitud-cohorte/informacion");
+}
+</file>
+
+<file path="src/app/test/page.tsx">
+import Filter from "../../../components/Filter";
+import Send from "../../../components/Calendar";
+export default function LoginPage() {
+    return (
+        <div>
+            <Filter />
+
+        </div>
+    );
+}
+</file>
+
+<file path="src/app/usuario/dashboard/page.tsx">
+import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  FileClock,
+  FolderOpen,
+  GraduationCap,
+  ListTodo,
+  Paperclip,
+  Send,
+} from "lucide-react";
+import DashboardShell from "../../../../components/dashboard/DashboardShell";
+import DashboardCard from "../../../../components/dashboard/DashboardCard";
+import KpiCard from "../../../../components/dashboard/KpiCard";
+import StatusBadge from "../../../../components/dashboard/StatusBadge";
+
+const misSolicitudes = [
+  {
+    id: "SOL-2026-010",
+    programa: "Ingeniería de Sistemas",
+    cohorte: "2026-1",
+    estado: "Borrador",
+    fecha: "2026-04-18",
+  },
+  {
+    id: "SOL-2026-011",
+    programa: "Ciencia de Datos",
+    cohorte: "2026-2",
+    estado: "Pendiente anexos",
+    fecha: "2026-04-16",
+  },
+];
+
+export default function UsuarioDashboardPage() {
+  return (
+    <DashboardShell
+      title="Dashboard usuario"
+      subtitle="Administre sus solicitudes, complete anexos y dé seguimiento a cada etapa del proceso."
+      roleLabel="Usuario"
+      activeRole="usuario"
+    >
+      <div className="space-y-8">
+        <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            title="Mis solicitudes"
+            value="2"
+            change="1 actualización reciente"
+            icon={<ClipboardList size={18} />}
+            tone="green"
+          />
+          <KpiCard
+            title="En borrador"
+            value="1"
+            change="Pendiente completar"
+            icon={<FileClock size={18} />}
+            tone="cream"
+          />
+          <KpiCard
+            title="Pendientes anexos"
+            value="1"
+            change="Requiere documentos"
+            icon={<Paperclip size={18} />}
+            tone="white"
+          />
+          <KpiCard
+            title="Enviadas"
+            value="0"
+            change="Aún sin envío final"
+            icon={<Send size={18} />}
+            tone="green"
+          />
+        </section>
+
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <DashboardCard
+            title="Continúa tu proceso"
+            subtitle="Acciones más frecuentes para completar tu solicitud."
+            icon={<FolderOpen size={18} />}
+            tone="green"
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ActionBlock
+                title="Crear solicitud"
+                text="Iniciar una nueva solicitud de apertura."
+                href="/solicitud-cohorte/informacion"
+                icon={<ClipboardList size={18} />}
+              />
+              <ActionBlock
+                title="Editar descripción"
+                text="Completar perfil del aspirante y criterios."
+                href="/solicitud-cohorte/descripcion"
+                icon={<ListTodo size={18} />}
+              />
+              <ActionBlock
+                title="Configurar cohorte"
+                text="Registrar estímulos y datos asociados."
+                href="/solicitud-cohorte/cohorte"
+                icon={<GraduationCap size={18} />}
+              />
+              <ActionBlock
+                title="Subir anexos"
+                text="Adjuntar documentación pendiente."
+                href="/solicitud-cohorte/anexos-1"
+                icon={<Paperclip size={18} />}
+              />
+            </div>
+          </DashboardCard>
+
+          <DashboardCard
+            title="Mi progreso"
+            subtitle="Estado actual de tu solicitud principal."
+            icon={<CheckCircle2 size={18} />}
+            tone="cream"
+          >
+            <div className="space-y-5">
+              <ProgressRow label="Información general" value={100} />
+              <ProgressRow label="Descripción" value={82} />
+              <ProgressRow label="Cohorte" value={60} />
+              <ProgressRow label="Anexos" value={45} />
+              <ProgressRow label="Envío final" value={20} />
+            </div>
+
+            <div className="mt-6 rounded-[18px] border border-green-200 bg-white p-4">
+              <p className="text-sm font-semibold text-neutral-900">
+                Próxima acción sugerida
+              </p>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                Completar los anexos pendientes para poder avanzar al envío final.
+              </p>
+            </div>
+          </DashboardCard>
+        </div>
+
+        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <DashboardCard
+            title="Mis solicitudes recientes"
+            subtitle="Resumen de procesos registrados en tu cuenta."
+            icon={<FileClock size={18} />}
+            tone="white"
+          >
+            <div className="overflow-hidden rounded-[18px] border border-neutral-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-[#f8faf8]">
+                    <tr className="text-left text-neutral-600">
+                      <th className="px-4 py-3 font-semibold">Código</th>
+                      <th className="px-4 py-3 font-semibold">Programa</th>
+                      <th className="px-4 py-3 font-semibold">Cohorte</th>
+                      <th className="px-4 py-3 font-semibold">Estado</th>
+                      <th className="px-4 py-3 font-semibold">Fecha</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {misSolicitudes.map((row) => (
+                      <tr key={row.id} className="border-t border-neutral-200">
+                        <td className="px-4 py-3 font-semibold text-[#0f5c3a]">
+                          {row.id}
+                        </td>
+                        <td className="px-4 py-3 text-neutral-700">{row.programa}</td>
+                        <td className="px-4 py-3 text-neutral-700">{row.cohorte}</td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={row.estado} />
+                        </td>
+                        <td className="px-4 py-3 text-neutral-700">{row.fecha}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </DashboardCard>
+
+          <DashboardCard
+            title="Agenda y seguimiento"
+            subtitle="Recordatorios clave de tu flujo actual."
+            icon={<CalendarDays size={18} />}
+            tone="green"
+          >
+            <div className="space-y-4">
+              <TimelineItem
+                title="Completar anexos"
+                text="Pendiente esta semana"
+                active
+              />
+              <TimelineItem
+                title="Revisión final"
+                text="Disponible cuando termines anexos"
+              />
+              <TimelineItem
+                title="Enviar solicitud"
+                text="Último paso del proceso"
+              />
+            </div>
+          </DashboardCard>
+        </div>
+      </div>
+    </DashboardShell>
+  );
+}
+
+function ActionBlock({
+  title,
+  text,
+  href,
+  icon,
+}: {
+  title: string;
+  text: string;
+  href: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      className="rounded-[18px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px]"
+    >
+      <div className="rounded-2xl bg-green-100 p-3 text-[#0f5c3a] w-fit">
+        {icon}
+      </div>
+      <p className="mt-4 text-base font-bold text-neutral-900">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+    </a>
+  );
+}
+
+function ProgressRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-sm">
+        <span className="font-medium text-neutral-700">{label}</span>
+        <span className="font-semibold text-[#0f5c3a]">{value}%</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+        <div
+          className="h-full rounded-full bg-[#0f5c3a]"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TimelineItem({
+  title,
+  text,
+  active = false,
+}: {
+  title: string;
+  text: string;
+  active?: boolean;
+}) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex flex-col items-center">
+        <div
+          className={`mt-1 h-3.5 w-3.5 rounded-full ${
+            active ? "bg-[#0f5c3a]" : "bg-neutral-300"
+          }`}
+        />
+        <div className="mt-1 h-full w-[2px] bg-neutral-200" />
+      </div>
+
+      <div className="pb-5">
+        <p className="text-sm font-semibold text-neutral-900">{title}</p>
+        <p className="mt-1 text-sm text-neutral-600">{text}</p>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

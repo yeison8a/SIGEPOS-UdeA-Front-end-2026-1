@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import StepProgress from "./StepProgress";
 import { SOLICITUD_COHORTE_STEPS } from "../../lib/solicitud-cohorte/steps";
+import { useRouter } from "next/navigation";
 
 type SolicitudShellProps = {
   currentStep: number;
@@ -13,13 +14,24 @@ export default function SolicitudShell({
   description,
   children,
 }: SolicitudShellProps) {
+   const router = useRouter();
   return (
-    <main className="min-h-screen bg-[#e9dfdf] px-4 py-8 md:px-8">
+    <main className="min-h-screen bg-[#e9dfdf] px-6 py-8 md:px-8">
+      <div className="mb-6 ml-4">
+      <button
+        type="button"
+        onClick={() => router.replace("/usuario/dashboard")}
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#0f5c3a] bg-white px-5 py-3 text-sm font-semibold text-[#0f5c3a] transition hover:bg-green-50"
+       >
+        Regresar
+      </button>
+      </div>
       <section className="mx-auto w-full max-w-7xl overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
         <div className="h-2 w-full bg-[#0f5c3a]" />
 
         <div className="border-b border-neutral-200 bg-white px-6 py-7 md:px-10">
           <div className="max-w-3xl">
+            
             <span className="inline-flex items-center rounded-full bg-green-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#0f5c3a]">
               Portal de Posgrados
             </span>

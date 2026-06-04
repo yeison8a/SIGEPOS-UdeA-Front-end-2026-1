@@ -51,11 +51,6 @@ export default function DashboardShell({
             icon: <LayoutDashboard size={18} />,
           },
           {
-            label: "Solicitudes",
-            href: "/admin/solicitudes",
-            icon: <ClipboardList size={18} />,
-          },
-          {
             label: "Gestión usuarios",
             href: "/admin/usuarios",
             icon: <Users size={18} />,
