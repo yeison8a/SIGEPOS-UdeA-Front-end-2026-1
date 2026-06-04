@@ -79,7 +79,7 @@ export default function DashboardShell({
           },
           {
             label: "Mis procesos",
-            href: "#",
+            href: "/usuario/proceso",
             icon: <FileSearch size={18} />,
           },
           {
