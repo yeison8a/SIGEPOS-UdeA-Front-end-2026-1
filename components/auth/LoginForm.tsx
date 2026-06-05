@@ -237,24 +237,6 @@ switch (role) {
                   Conocer programas
                 </button>
               </div>
-
-              <div className="mt-10 rounded-2xl border border-neutral-200 bg-[#fbfaf5] p-5">
-                <p className="text-sm font-semibold text-neutral-900">
-                  Usuarios demo conectados al dashboard
-                </p>
-
-                <div className="mt-3 space-y-2 text-sm text-neutral-600">
-                  <p>
-                    <span className="font-semibold text-[#0f5c3a]">Admin:</span>{" "}
-                    admin@udea.edu.co / 123456
-                  </p>
-                  <p>
-                    <span className="font-semibold text-[#0f5c3a]">Usuario:</span>{" "}
-                    usuario@udea.edu.co / 123456
-                  </p>
-                </div>
-              </div>
-
               <div className="mt-8 flex flex-wrap gap-6 text-sm text-neutral-500">
                 <span>Admisiones abiertas</span>
                 <span>Acompañamiento al aspirante</span>

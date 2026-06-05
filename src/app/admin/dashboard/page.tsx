@@ -214,14 +214,6 @@ if (error) {
             icon={<ClipboardList size={18} />}
             tone="green"
           />
-
-          <KpiCard
-            title="Anexos pendientes"
-            value={loading ? "..." : String(anexosPendientes.length)}
-            change=""
-            icon={<Paperclip size={18} />}
-            tone="white"
-          />
           <KpiCard
             title="Usuarios activos"
             value={loading ? "..." : String(totalUsuariosActivos)}

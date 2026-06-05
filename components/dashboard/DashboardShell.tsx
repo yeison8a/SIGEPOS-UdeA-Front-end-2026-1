@@ -60,11 +60,6 @@ export default function DashboardShell({
             href: "/admin/revisiones",
             icon: <FileSearch size={18} />,
           },
-          {
-            label: "Configuración",
-            href: "#",
-            icon: <Settings size={18} />,
-          },
         ]
       : [
           {
