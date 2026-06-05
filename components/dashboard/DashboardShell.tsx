@@ -77,11 +77,6 @@ export default function DashboardShell({
             href: "/usuario/proceso",
             icon: <FileSearch size={18} />,
           },
-          {
-            label: "Perfil",
-            href: "#",
-            icon: <UserCircle2 size={18} />,
-          },
         ];
 
   return (

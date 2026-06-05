@@ -189,36 +189,6 @@ const enviadas =
             tone="green"
           />
 
-          <KpiCard
-            title="En borrador"
-            value={
-              loading ? "..." : borrador.toString()
-            }
-            change="Pendiente completar"
-            icon={<FileClock size={18} />}
-            tone="cream"
-          />
-
-          <KpiCard
-            title="Pendientes anexos"
-            value={
-              loading ? "..." : pendientes.toString()
-            }
-            change="Pendiente anexos"
-            icon={<Paperclip size={18} />}
-            tone="white"
-          />
-
-          <KpiCard
-            title="Enviadas"
-            value={
-              loading ? "..." : enviadas.toString()
-            }
-            change="procesos enviados"
-            icon={<Send size={18} />}
-            tone="green"
-          />
-
         </section>
 
         <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
